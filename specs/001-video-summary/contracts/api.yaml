@@ -1,0 +1,117 @@
+openapi: 3.1.0
+info:
+  title: ClipNotes API
+  version: 0.1.0
+  description: >-
+    API contract for uploading short video clips and retrieving Hafnia-generated summaries.
+servers:
+  - url: http://localhost:8000
+paths:
+  /analyze:
+    post:
+      summary: Upload a video clip for summarisation
+      description: Accepts a short video and returns a structured summary produced by Hafnia VLM.
+      operationId: analyzeVideo
+      tags:
+        - analysis
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: MP4 or MKV video under 100 MB and 30 seconds duration.
+      responses:
+        '200':
+          description: Summary successfully generated.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/SummaryResponse'
+                  - $ref: '#/components/schemas/SummaryJsonResponse'
+        '400':
+          description: Validation error (invalid format, size, duration).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Schema validation error in request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Hafnia VLM failed to produce a summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    SummaryResponse:
+      type: object
+      required:
+        - submission_id
+        - summary
+        - latency_ms
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        summary:
+          type: array
+          description: Bullet list describing events found in the clip.
+          items:
+            type: string
+        latency_ms:
+          type: integer
+          minimum: 0
+        completed_at:
+          type: string
+          format: date-time
+    SummaryJsonResponse:
+      type: object
+      required:
+        - submission_id
+        - structured_summary
+        - latency_ms
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        structured_summary:
+          type: object
+          additionalProperties: true
+        fallback_summary:
+          type: array
+          items:
+            type: string
+        latency_ms:
+          type: integer
+          minimum: 0
+        completed_at:
+          type: string
+          format: date-time
+    ErrorResponse:
+      type: object
+      required:
+        - submission_id
+        - error
+      properties:
+        submission_id:
+          type: string
+          format: uuid
+        error:
+          type: string
+        detail:
+          type: string
+        remediation:
+          type: string
