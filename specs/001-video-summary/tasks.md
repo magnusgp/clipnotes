@@ -28,11 +28,11 @@ description: "Task list for ClipNotes video summary MVP"
 
 **Purpose**: Establish backend/frontend workspaces, shared configs, and project tooling.
 
-- [ ] T001 Scaffold FastAPI project layout (`backend/main.py`, `backend/app/__init__.py`, directories for api/core/services/models`).
-- [ ] T002 Add backend dependencies (FastAPI, HTTPX, Pydantic, Uvicorn, pytest, Ruff) to `pyproject.toml` and regenerate `uv.lock` via `uv lock`.
-- [ ] T003 Initialize Vite + React frontend with Tailwind + shadcn/ui scaffolding (`frontend/package.json`, `frontend/tailwind.config.cjs`, `frontend/src/main.tsx`).
-- [ ] T004 Create `.env.example` documenting `HAFNIA_API_KEY`, `HAFNIA_BASE_URL`, and local proxy settings.
-- [ ] T005 Update `README.md` with canonical `uv run` commands, frontend scripts, and lint/test instructions aligned with the constitution.
+- [x] T001 Scaffold FastAPI project layout (`backend/main.py`, `backend/app/__init__.py`, directories for api/core/services/models`).
+- [x] T002 Add backend dependencies (FastAPI, HTTPX, Pydantic, Uvicorn, pytest, Ruff) to `pyproject.toml` and regenerate `uv.lock` via `uv lock`.
+- [x] T003 Initialize Vite + React frontend with Tailwind + shadcn/ui scaffolding (`frontend/package.json`, `frontend/tailwind.config.cjs`, `frontend/src/main.tsx`).
+- [x] T004 Create `.env.example` documenting `HAFNIA_API_KEY`, `HAFNIA_BASE_URL`, and local proxy settings.
+- [x] T005 Update `README.md` with canonical `uv run` commands, frontend scripts, and lint/test instructions aligned with the constitution.
 
 ---
 
@@ -40,11 +40,11 @@ description: "Task list for ClipNotes video summary MVP"
 
 **Purpose**: Core infrastructure that MUST be complete before ANY user story can be implemented.
 
-- [ ] T006 Implement environment configuration loader in `backend/app/core/config.py` (reads env vars, validates required Hafnia keys).
-- [ ] T007 Configure structured logging and latency timer helpers in `backend/app/core/logging.py`.
-- [ ] T008 Build Hafnia API client scaffolding in `backend/app/services/hafnia_client.py` (async HTTPX client, asset upload + completion method signatures).
-- [ ] T009 Define Pydantic schemas for submission/summary/error responses in `backend/app/models/schemas.py`.
-- [ ] T010 Configure local integration plumbing: enable CORS in `backend/main.py` and add Vite proxy target in `frontend/vite.config.ts`.
+- [x] T006 Implement environment configuration loader in `backend/app/core/config.py` (reads env vars, validates required Hafnia keys).
+- [x] T007 Configure structured logging and latency timer helpers in `backend/app/core/logging.py`.
+- [x] T008 Build Hafnia API client scaffolding in `backend/app/services/hafnia_client.py` (async HTTPX client, asset upload + completion method signatures).
+- [x] T009 Define Pydantic schemas for submission/summary/error responses in `backend/app/models/schemas.py`.
+- [x] T010 Configure local integration plumbing: enable CORS in `backend/main.py` and add Vite proxy target in `frontend/vite.config.ts`.
 
 ---
 
@@ -56,19 +56,19 @@ description: "Task list for ClipNotes video summary MVP"
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T011 [P] [US1] Add success integration test with mocked Hafnia in `backend/tests/integration/test_analyze_endpoint.py::test_analyze_success`.
-- [ ] T012 [P] [US1] Add unit tests for summary formatting and fallback logic in `backend/tests/unit/test_summarizer.py`.
+- [x] T011 [P] [US1] Add success integration test with mocked Hafnia in `backend/tests/integration/test_analyze_endpoint.py::test_analyze_success`.
+- [x] T012 [P] [US1] Add unit tests for summary formatting and fallback logic in `backend/tests/unit/test_summarizer.py`.
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implement Hafnia API client logic (asset upload + completion request, error mapping) in `backend/app/services/hafnia_client.py`.
-- [ ] T014 [US1] Implement summarizer service orchestrating Hafnia calls and latency tracking in `backend/app/services/summarizer.py`.
-- [ ] T015 [US1] Implement `POST /analyze` endpoint wiring validation → summarizer → response models in `backend/app/api/routes.py`.
-- [ ] T016 [US1] Persist summary payload structure (bullet list + optional JSON) in `backend/app/models/schemas.py`.
-- [ ] T017 [US1] Build accessible upload form with shadcn/ui components in `frontend/src/components/UploadForm.tsx`.
-- [ ] T018 [US1] Implement `useAnalyze` hook handling multipart POST, loading state, and cancellation in `frontend/src/hooks/useAnalyze.ts`.
-- [ ] T019 [US1] Render summary results (bullets + JSON view) in `frontend/src/components/SummaryPanel.tsx`.
-- [ ] T020 [US1] Compose page layout and spinner states in `frontend/src/pages/App.tsx`.
+- [x] T013 [US1] Implement Hafnia API client logic (asset upload + completion request, error mapping) in `backend/app/services/hafnia_client.py`.
+- [x] T014 [US1] Implement summarizer service orchestrating Hafnia calls and latency tracking in `backend/app/services/summarizer.py`.
+- [x] T015 [US1] Implement `POST /analyze` endpoint wiring validation → summarizer → response models in `backend/app/api/routes.py`.
+- [x] T016 [US1] Persist summary payload structure (bullet list + optional JSON) in `backend/app/models/schemas.py`.
+- [x] T017 [US1] Build accessible upload form with shadcn/ui components in `frontend/src/components/UploadForm.tsx`.
+- [x] T018 [US1] Implement `useAnalyze` hook handling multipart POST, loading state, and cancellation in `frontend/src/hooks/useAnalyze.ts`.
+- [x] T019 [US1] Render summary results (bullets + JSON view) in `frontend/src/components/SummaryPanel.tsx`.
+- [x] T020 [US1] Compose page layout and spinner states in `frontend/src/pages/App.tsx`.
 
 ---
 
