@@ -5,6 +5,20 @@
 **Status**: Draft  
 **Input**: User description: "$ARGUMENTS"
 
+## Constitution Alignment *(mandatory)*
+
+- **Linting**: Describe how the feature keeps Python code PEP 8 compliant via `uv run` lint commands and how frontend
+  ESLint gates will run in CI.
+- **Testing**: Detail the pytest coverage to be added or updated and restate that verification uses `uv run pytest`.
+- **UV Usage**: List every Python package management or runtime action this feature needs and the exact `uv`
+  commands to execute them.
+- **Accessible UI**: If the feature touches UI, describe the Tailwind + shadcn/ui components involved and the WCAG 2.1
+  AA checks (manual + automated) that will be performed.
+- **Performance Budget**: Explain how the solution will measure and meet the ≤10s (target 5s) analysis time for 15–30s
+  clips.
+- **Credential Handling**: Enumerate required environment variables or secret references and how they are documented.
+- **Iteration Plan**: Outline intended increments or experiments and how outcomes will be captured for the team.
+
 ## User Scenarios & Testing *(mandatory)*
 
 <!--
@@ -26,7 +40,8 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently - e.g., "Can be fully tested by [specific action] and delivers [specific value]"]
+**Independent Test**: [Describe how this can be tested independently - e.g., "Run `uv run pytest -k '[marker]'` to
+verify and deliver [specific value]"]
 
 **Acceptance Scenarios**:
 
@@ -41,7 +56,7 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: [Describe how this can be tested independently - reference the exact `uv run pytest` command]
 
 **Acceptance Scenarios**:
 
@@ -55,7 +70,7 @@
 
 **Why this priority**: [Explain the value and why it has this priority level]
 
-**Independent Test**: [Describe how this can be tested independently]
+**Independent Test**: [Describe how this can be tested independently - reference the exact `uv run pytest` command]
 
 **Acceptance Scenarios**:
 
@@ -94,6 +109,17 @@
 
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
+
+### Constitutional Constraints *(mandatory)*
+
+- **CC-001**: Feature MUST document linting hooks (Python via `uv run ...`, frontend ESLint) that apply to this scope.
+- **CC-002**: Feature MUST include or reference pytest coverage executed via `uv run pytest`.
+- **CC-003**: Feature MUST describe how Tailwind + shadcn/ui components remain accessible and responsive.
+- **CC-004**: Feature MUST record expected analysis latency and instrumentation supporting the ≤10s target for 15–30s
+  clips.
+- **CC-005**: Feature MUST outline environment variables or secrets touched and their storage location (no repository
+  secrets).
+- **CC-006**: Feature MUST state iteration checkpoints or experiment logging plans that enable fast adjustments.
 
 ### Key Entities *(include if feature involves data)*
 

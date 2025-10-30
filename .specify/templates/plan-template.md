@@ -31,7 +31,16 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- Confirm lint coverage: document how Python linting runs via `uv run` (e.g., `uv run ruff check`) and how frontend
+  ESLint gates will run in CI.
+- Confirm backend testing: outline pytest additions and explicitly state `uv run pytest` as the verification command.
+- Confirm UV usage: list every Python package management or runtime command the feature will trigger and show the `uv`
+  invocation to be used.
+- Confirm UI accessibility and responsiveness: note Tailwind + shadcn/ui components touched and how WCAG 2.1 AA checks
+  will be executed.
+- Confirm performance budget: describe measurement plan proving 15–30s clips return results within ≤10s (target 5s).
+- Confirm credential hygiene: identify environment variables or secrets required and where rotation guidance will live.
+- Confirm hackathon velocity: describe intended iteration slices and documentation touchpoints for rapid experiments.
 
 ## Project Structure
 
