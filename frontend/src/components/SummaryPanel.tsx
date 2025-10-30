@@ -23,6 +23,7 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
   const isLoading = status === "uploading";
   const hasSummary = Boolean(summary);
   const structured = summary?.structured_summary?.data;
+  const showValidationTips = status === "error" && !hasSummary;
 
   return (
     <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-6 shadow">
@@ -60,6 +61,13 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
         >
           <p className="font-semibold">We couldn&apos;t analyze that clip.</p>
           <p className="mt-1 text-xs text-rose-100/80">{error}</p>
+          {showValidationTips ? (
+            <ul className="mt-3 space-y-1 text-xs text-rose-100/70">
+              <li>• Use MP4 or MKV formats only.</li>
+              <li>• Keep file size under 100 MB.</li>
+              <li>• Target clips around 30 seconds for best results.</li>
+            </ul>
+          ) : null}
         </div>
       ) : null}
 

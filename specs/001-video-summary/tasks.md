@@ -80,15 +80,15 @@ description: "Task list for ClipNotes video summary MVP"
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T021 [P] [US2] Extend integration tests for file size/format failures in `backend/tests/integration/test_analyze_endpoint.py::test_invalid_uploads`.
-- [ ] T022 [P] [US2] Add frontend validation test ensuring error messaging in `frontend/tests/analyze.spec.tsx::invalid_upload_shows_message`.
+- [x] T021 [P] [US2] Extend integration tests for file size/format failures in `backend/tests/integration/test_analyze_endpoint.py::test_invalid_uploads`.
+- [x] T022 [P] [US2] Add frontend validation test ensuring error messaging in `frontend/tests/analyze.spec.tsx::invalid_upload_shows_message`.
 
 ### Implementation for User Story 2
 
-- [ ] T023 [US2] Implement reusable validation helpers enforcing size/duration/mime type in `backend/app/services/validators.py`.
-- [ ] T024 [US2] Update `backend/app/api/routes.py` to short-circuit invalid uploads with structured `ErrorResponse` payloads.
-- [ ] T025 [US2] Add client-side validation + helper text to `frontend/src/components/UploadForm.tsx`.
-- [ ] T026 [US2] Display validation guidance and retry affordances in `frontend/src/components/SummaryPanel.tsx`.
+- [x] T023 [US2] Implement reusable validation helpers enforcing size/duration/mime type in `backend/app/services/validators.py`.
+- [x] T024 [US2] Update `backend/app/api/routes.py` to short-circuit invalid uploads with structured `ErrorResponse` payloads.
+- [x] T025 [US2] Add client-side validation + helper text to `frontend/src/components/UploadForm.tsx`.
+- [x] T026 [US2] Display validation guidance and retry affordances in `frontend/src/components/SummaryPanel.tsx`.
 
 ---
 

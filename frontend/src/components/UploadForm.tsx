@@ -2,6 +2,9 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 
 import type { AnalyzeStatus } from "../hooks/useAnalyze";
 
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
+const SUPPORTED_CONTENT_TYPES = new Set(["video/mp4", "video/x-matroska"]);
+
 interface UploadFormProps {
   status: AnalyzeStatus;
   onAnalyze: (file: File) => void;
@@ -21,6 +24,24 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
 
   const isUploading = status === "uploading";
 
+  const isAnalyzeDisabled = isUploading || !selectedFile || Boolean(formError);
+
+  const validateFile = (file: File | null): string | null => {
+    if (!file) {
+      return "Choose an MP4 or MKV clip before analyzing.";
+    }
+
+    if (!SUPPORTED_CONTENT_TYPES.has(file.type)) {
+      return "Unsupported file type. Upload an MP4 or MKV clip.";
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return "File exceeds the 100 MB limit. Trim or compress the clip.";
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     if (status === "success") {
       setSelectedFile(null);
@@ -33,17 +54,21 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
-    setFormError(null);
+    const validationError = validateFile(file);
+    setFormError(validationError);
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedFile) {
-      setFormError("Choose an MP4 or MKV clip before analyzing.");
+    const validationError = validateFile(selectedFile);
+    if (validationError) {
+      setFormError(validationError);
       return;
     }
     setFormError(null);
-    onAnalyze(selectedFile);
+    if (selectedFile) {
+      onAnalyze(selectedFile);
+    }
   };
 
   const handleClear = () => {
@@ -99,7 +124,7 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
           <button
             type="submit"
             className="inline-flex items-center justify-center rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!selectedFile || isUploading}
+            disabled={isAnalyzeDisabled}
           >
             Analyze clip
           </button>
