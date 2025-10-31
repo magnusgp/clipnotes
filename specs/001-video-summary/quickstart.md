@@ -34,6 +34,13 @@ npm run dev
 3. Observe loading spinner; once complete, review bullet summary or JSON view.
 4. Check browser console and backend logs for latency metrics.
 
+## Accessibility Audit Notes
+- Run `npm run test:axe` (to be added) or execute `npx @axe-core/playwright` during manual sweeps.
+- Keyboard path: `Tab` into **Analyze clip**, `Shift+Tab` to return to file input, confirm focus rings match contrast guidelines.
+- Status Banner announces updates via `aria-live="polite"`; verify with screen readers (VoiceOver, NVDA).
+- Ensure error alerts provide remediation text and are reachable via `Shift+Tab` immediately after submission failures.
+- Record findings and any remediation work in this section after each audit cycle.
+
 ## Stretch Goal – Containers
 - Backend image: build with `docker build -f backend/Dockerfile -t clipnotes-backend .`
 - Frontend image: build with `docker build -f frontend/Dockerfile -t clipnotes-frontend .`

@@ -100,15 +100,15 @@ description: "Task list for ClipNotes video summary MVP"
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T027 [P] [US3] Add pytest coverage for Hafnia timeout + fallback messaging in `backend/tests/integration/test_analyze_endpoint.py::test_hafnia_failure`.
-- [ ] T028 [P] [US3] Add frontend test covering spinner-to-error transition in `frontend/tests/analyze.spec.tsx::handles_server_error`.
+- [x] T027 [P] [US3] Add pytest coverage for Hafnia timeout + fallback messaging in `backend/tests/integration/test_analyze_endpoint.py::test_hafnia_failure`.
+- [x] T028 [P] [US3] Add frontend test covering spinner-to-error transition in `frontend/tests/analyze.spec.tsx::handles_server_error`.
 
 ### Implementation for User Story 3
 
-- [ ] T029 [US3] Implement retry/backoff + graceful failure responses in `backend/app/services/hafnia_client.py`.
-- [ ] T030 [US3] Ensure summarizer provides fallback copy when Hafnia returns partial/empty data in `backend/app/services/summarizer.py`.
-- [ ] T031 [US3] Add status banner (aria-live region) and timestamp display in `frontend/src/components/StatusBanner.tsx` and integrate into page.
-- [ ] T032 [US3] Update `frontend/src/components/SummaryPanel.tsx` to present error guidance and last-updated metadata.
+- [x] T029 [US3] Implement retry/backoff + graceful failure responses in `backend/app/services/hafnia_client.py`.
+- [x] T030 [US3] Ensure summarizer provides fallback copy when Hafnia returns partial/empty data in `backend/app/services/summarizer.py`.
+- [x] T031 [US3] Add status banner (aria-live region) and timestamp display in `frontend/src/components/StatusBanner.tsx` and integrate into page.
+- [x] T032 [US3] Update `frontend/src/components/SummaryPanel.tsx` to present error guidance and last-updated metadata.
 
 ---
 
@@ -116,10 +116,33 @@ description: "Task list for ClipNotes video summary MVP"
 
 **Purpose**: Performance evidence, accessibility validation, documentation, and stretch containerization.
 
-- [ ] T033 Document latency metrics and instrumentation steps in `docs/performance/clipnotes.md`.
-- [ ] T034 Capture accessibility audit notes (axe report + manual keyboard walkthrough) in `specs/001-video-summary/quickstart.md`.
-- [ ] T035 Create Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`) and `docker-compose.yml` for full-stack local deployment.
-- [ ] T036 Run final lint/test sweep (`uv run ruff check`, `uv run pytest`, `npm run lint`) and record commands in `README.md` release checklist section.
+- [x] T033 Document latency metrics and instrumentation steps in `docs/performance/clipnotes.md`.
+- [x] T034 Capture accessibility audit notes (axe report + manual keyboard walkthrough) in `specs/001-video-summary/quickstart.md`.
+- [x] T035 Create Dockerfiles (`backend/Dockerfile`, `frontend/Dockerfile`) and `docker-compose.yml` for full-stack local deployment.
+- [x] T036 Run final lint/test sweep (`uv run ruff check`, `uv run pytest`, `npm run lint`) and record commands in `README.md` release checklist section.
+
+---
+
+## Phase 6: User Story 4 - Continue conversation and manage session clips (Priority: P3)
+
+**Goal**: Let users revisit uploaded clips, request additional Hafnia completions, and delete assets during the same browser session.
+
+**Independent Test**: `uv run pytest -k "test_chat_with_existing_asset"` verifies chat endpoint behavior; Vitest spec ensures the session history UI renders stored clips and disables actions after deletion.
+
+### Tests for User Story 4 ⚠️
+
+- [x] T037 [P] [US4] Add integration coverage for `POST /api/chat` using a mocked Hafnia client in `backend/tests/integration/test_chat_endpoint.py`.
+- [x] T038 [P] [US4] Add integration coverage for asset deletion flow in `backend/tests/integration/test_assets_endpoint.py`.
+- [x] T039 [P] [US4] Add frontend test ensuring session history renders clips, supports chat invocation, and reflects deletions in `frontend/tests/history.spec.tsx`.
+
+### Implementation for User Story 4
+
+- [x] T040 [US4] Extend `backend/app/models/schemas.py` to include `asset_id` and optional `completion_id` in summary responses.
+- [x] T041 [US4] Update `backend/app/services/summarizer.py` to return Hafnia asset/completion identifiers and store them in an in-memory session registry.
+- [x] T042 [US4] Implement `POST /api/chat` and `DELETE /api/assets/{submission_id}` endpoints in `backend/app/api/routes.py` using the registry.
+- [x] T043 [US4] Enhance `frontend/src/hooks/useAnalyze.ts` with session history state, chat request helper, and deletion handling.
+- [x] T044 [US4] Build `frontend/src/components/SessionHistory.tsx` (and supporting chat UI) to list clips, initiate chats, and display responses.
+- [x] T045 [US4] Wire the new history UI into `frontend/src/pages/App.tsx` with appropriate accessibility hooks.
 
 ---
 

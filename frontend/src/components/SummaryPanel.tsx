@@ -1,10 +1,124 @@
-import type { AnalyzeStatus, SummaryResponse } from "../hooks/useAnalyze";
+import type { AnalyzeStatus, AnalysisMoment, ClipAnalysis, SummaryResponse } from "../hooks/useAnalyze";
+import Timeline from "./Timeline";
+
+function tryParseStructuredSummary(value: string | null | undefined): Record<string, unknown> | null {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parseCandidate = (candidate: string) => {
+    try {
+      const parsed: unknown = JSON.parse(candidate);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
+  const direct = parseCandidate(trimmed);
+  if (direct) {
+    return direct;
+  }
+
+  const start = trimmed.indexOf("{");
+  const end = trimmed.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    return null;
+  }
+
+  return parseCandidate(trimmed.slice(start, end + 1));
+}
+
+function normalizeMomentsFromStructured(value: unknown): AnalysisMoment[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalized: AnalysisMoment[] = [];
+  for (const candidate of value) {
+    if (!candidate || typeof candidate !== "object") {
+      continue;
+    }
+
+    const record = candidate as Record<string, unknown>;
+    const startCandidate = record.start_s ?? record.start ?? record.startSeconds;
+    const endCandidate = record.end_s ?? record.end ?? record.endSeconds;
+    const start = Number(startCandidate);
+    const end = Number(endCandidate);
+
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      continue;
+    }
+
+    const labelCandidate = record.label;
+    const label = typeof labelCandidate === "string" && labelCandidate.trim() ? labelCandidate.trim() : "moment";
+    const severity = normalizeSeverity(record.severity);
+
+    normalized.push({
+      start_s: start,
+      end_s: end,
+      label,
+      severity,
+    });
+  }
+
+  return normalized;
+}
+
+function normalizeSeverity(value: unknown): AnalysisMoment["severity"] {
+  if (typeof value !== "string") {
+    return "medium";
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "low" || normalized === "medium" || normalized === "high") {
+    return normalized;
+  }
+
+  return "medium";
+}
+
+function extractSummaryParagraphs(
+  structured: Record<string, unknown> | null,
+  fallback: string | null | undefined,
+): string[] {
+  const summaryCandidate = typeof structured?.summary === "string" ? structured.summary : fallback ?? "";
+  if (!summaryCandidate) {
+    return [];
+  }
+
+  const cleaned = summaryCandidate
+    .replace(/```json?/gi, "")
+    .replace(/```/g, "")
+    .replace(/\*\*/g, "")
+    .trim();
+
+  if (!cleaned) {
+    return [];
+  }
+
+  return cleaned
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
 
 interface SummaryPanelProps {
   status: AnalyzeStatus;
   summary?: SummaryResponse;
+  analysis?: ClipAnalysis;
   error?: string;
+  remediation?: string;
   fileName?: string;
+  statusChangedAt?: string;
 }
 
 function formatTimestamp(timestamp: string) {
@@ -18,12 +132,39 @@ function formatTimestamp(timestamp: string) {
   });
 }
 
-export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelProps) {
-  const isIdle = status === "idle" && !summary;
-  const isLoading = status === "uploading";
+export function SummaryPanel({
+  status,
+  summary,
+  analysis,
+  error,
+  remediation,
+  fileName,
+  statusChangedAt,
+}: SummaryPanelProps) {
+  const isIdle = status === "idle" && !summary && !analysis;
   const hasSummary = Boolean(summary);
+  const hasAnalysis = Boolean(analysis);
   const structured = summary?.structured_summary?.data;
-  const showValidationTips = status === "error" && !hasSummary;
+  const showValidationTips = status === "error" && !hasSummary && !hasAnalysis;
+  const lastUpdatedLabel = statusChangedAt ? formatTimestamp(statusChangedAt) : null;
+  const analysisStructured = tryParseStructuredSummary(analysis?.summary ?? null);
+  const derivedMoments = analysis?.moments?.length
+    ? analysis.moments
+    : normalizeMomentsFromStructured(analysisStructured ? analysisStructured["moments"] : undefined);
+  const momentCount = derivedMoments.length;
+  const highlightLabel = hasAnalysis
+    ? `${momentCount} moment${momentCount === 1 ? "" : "s"}`
+    : summary
+      ? `${summary.summary.length} bullets`
+      : null;
+  const overviewParagraphs = extractSummaryParagraphs(analysisStructured, analysis?.summary);
+  const formattedStructuredJson = analysisStructured ? JSON.stringify(analysisStructured, null, 2) : null;
+  const isLoading = status === "uploading" || status === "loading";
+  const showEmptySelection = status === "success" && !hasAnalysis && !hasSummary;
+  const loadingMessage =
+    status === "loading"
+      ? "Loading the stored summary and timeline…"
+      : "Analyzing video… this can take a few seconds.";
 
   return (
     <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-6 shadow">
@@ -34,9 +175,9 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
             <p className="text-xs text-slate-400">Working file: {fileName}</p>
           ) : null}
         </div>
-        {summary ? (
+        {highlightLabel ? (
           <span className="rounded-full border border-emerald-500 px-3 py-1 text-xs font-medium text-emerald-300">
-            {summary.summary.length} bullets
+            {highlightLabel}
           </span>
         ) : null}
       </header>
@@ -50,7 +191,7 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
       {isLoading ? (
         <div className="flex items-center gap-3" role="status" aria-live="polite">
           <span className="h-3 w-3 animate-spin rounded-full border-2 border-slate-300 border-t-transparent" />
-          <span className="text-sm text-slate-300">Analyzing video… this can take a few seconds.</span>
+          <span className="text-sm text-slate-300">{loadingMessage}</span>
         </div>
       ) : null}
 
@@ -61,6 +202,11 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
         >
           <p className="font-semibold">We couldn&apos;t analyze that clip.</p>
           <p className="mt-1 text-xs text-rose-100/80">{error}</p>
+          {remediation ? (
+            <p className="mt-2 text-xs text-rose-100/80">
+              <span className="font-medium">Next steps:</span> {remediation}
+            </p>
+          ) : null}
           {showValidationTips ? (
             <ul className="mt-3 space-y-1 text-xs text-rose-100/70">
               <li>• Use MP4 or MKV formats only.</li>
@@ -71,7 +217,89 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
         </div>
       ) : null}
 
-      {hasSummary ? (
+      {showEmptySelection ? (
+        <p className="mt-4 text-sm text-slate-400">
+          This clip has not been analyzed yet. Trigger an analysis run to view summaries and key moments.
+        </p>
+      ) : null}
+
+      {hasAnalysis ? (
+        <div className="mt-4 space-y-6">
+          <Timeline
+            clipLabel={fileName ?? analysis?.clip_id}
+            moments={derivedMoments}
+          />
+
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">Overview</h3>
+            {overviewParagraphs.length ? (
+              <div className="mt-2 space-y-2 text-sm text-slate-200">
+                {overviewParagraphs.map((paragraph, index) => (
+                  <p key={`${analysis?.clip_id ?? "analysis"}-paragraph-${index}`}>{paragraph}</p>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-slate-200">No summary available for this clip yet.</p>
+            )}
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">Key moments</h3>
+            {derivedMoments.length ? (
+              <ul className="mt-2 space-y-2 text-sm text-slate-100">
+                {derivedMoments.map((moment, index) => (
+                  <li key={`${moment.label}-${index}`} className="rounded-md border border-slate-800 bg-slate-950/50 p-3">
+                    <p className="font-semibold text-slate-100">{moment.label}</p>
+                    <p className="text-xs text-slate-400">
+                      {moment.start_s.toFixed(1)}s → {moment.end_s.toFixed(1)}s · Severity {moment.severity}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-slate-400">No key moments were returned.</p>
+            )}
+          </div>
+
+          {formattedStructuredJson ? (
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">Structured output</h3>
+              <pre className="mt-2 max-h-60 overflow-auto rounded-md bg-slate-950/70 p-4 text-xs text-slate-200">
+                {formattedStructuredJson}
+              </pre>
+            </div>
+          ) : null}
+
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-2 text-xs text-slate-400 sm:grid-cols-2">
+            <div className="flex flex-col gap-0.5">
+              <dt className="font-medium text-slate-300">Clip ID</dt>
+              <dd className="break-all text-slate-400">{analysis?.clip_id}</dd>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <dt className="font-medium text-slate-300">Completed</dt>
+              <dd>{analysis ? formatTimestamp(analysis.created_at) : ""}</dd>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <dt className="font-medium text-slate-300">Latency</dt>
+              <dd>{analysis?.latency_ms != null ? `${analysis.latency_ms} ms` : "—"}</dd>
+            </div>
+            {analysis?.prompt ? (
+              <div className="flex flex-col gap-0.5">
+                <dt className="font-medium text-slate-300">Prompt</dt>
+                <dd className="text-slate-400">{analysis.prompt}</dd>
+              </div>
+            ) : null}
+            {analysis?.error_code ? (
+              <div className="flex flex-col gap-0.5">
+                <dt className="font-medium text-slate-300">Last error</dt>
+                <dd className="text-slate-400">{analysis.error_message ?? analysis.error_code}</dd>
+              </div>
+            ) : null}
+          </dl>
+        </div>
+      ) : null}
+
+      {!hasAnalysis && hasSummary ? (
         <div className="mt-4 space-y-6">
           <div>
             <h3 className="text-sm font-semibold text-slate-200">Key moments</h3>
@@ -104,6 +332,10 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
               <dd className="break-all text-slate-400">{summary?.submission_id}</dd>
             </div>
             <div className="flex flex-col gap-0.5">
+              <dt className="font-medium text-slate-300">Asset ID</dt>
+              <dd className="break-all text-slate-400">{summary?.asset_id}</dd>
+            </div>
+            <div className="flex flex-col gap-0.5">
               <dt className="font-medium text-slate-300">Completed</dt>
               <dd>{summary ? formatTimestamp(summary.completed_at) : ""}</dd>
             </div>
@@ -111,8 +343,23 @@ export function SummaryPanel({ status, summary, error, fileName }: SummaryPanelP
               <dt className="font-medium text-slate-300">Latency</dt>
               <dd>{summary ? `${summary.latency_ms} ms` : ""}</dd>
             </div>
+            {summary?.completion_id ? (
+              <div className="flex flex-col gap-0.5">
+                <dt className="font-medium text-slate-300">Completion ID</dt>
+                <dd className="break-all text-slate-400">{summary.completion_id}</dd>
+              </div>
+            ) : null}
           </dl>
         </div>
+      ) : null}
+
+      {lastUpdatedLabel ? (
+        <p
+          data-testid="summary-last-updated"
+          className="mt-4 text-[0.7rem] uppercase tracking-wide text-slate-500"
+        >
+          Last updated: {lastUpdatedLabel}
+        </p>
       ) : null}
     </section>
   );

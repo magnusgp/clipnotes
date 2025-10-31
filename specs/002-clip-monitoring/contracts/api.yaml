@@ -1,0 +1,347 @@
+openapi: 3.1.0
+info:
+  title: ClipNotes Monitoring API (Wave 1)
+  version: 0.1.0
+  description: REST contract for clip registration, Hafnia-triggered analysis, and monitoring UI data.
+servers:
+  - url: http://localhost:8000
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      tags: [system]
+      responses:
+        '200':
+          description: Service is available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/clips:
+    post:
+      summary: Register a clip
+      tags: [clips]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClipCreateRequest'
+      responses:
+        '201':
+          description: Clip registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClipResponse'
+        '400':
+          description: Invalid filename provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: List recent clips
+      tags: [clips]
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Number of clips to return (default 25).
+      responses:
+        '200':
+          description: Paginated list of clips.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClipListResponse'
+  /api/clips/{clip_id}:
+    get:
+      summary: Retrieve clip details
+      tags: [clips]
+      parameters:
+        - name: clip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Clip metadata and latest analysis snapshot, if any.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClipDetailResponse'
+        '404':
+          description: Clip not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/analysis/{clip_id}:
+    post:
+      summary: Trigger Hafnia analysis for a clip
+      tags: [analysis]
+      parameters:
+        - name: clip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses:
+        '202':
+          description: Analysis started and latest result stored.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '404':
+          description: Clip not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Hafnia service failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Fetch latest analysis
+      tags: [analysis]
+      parameters:
+        - name: clip_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Latest Hafnia analysis payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '404':
+          description: Analysis not found for the clip.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+    ClipCreateRequest:
+      type: object
+      required: [filename]
+      properties:
+        filename:
+          type: string
+          minLength: 1
+          maxLength: 255
+    ClipResponse:
+      type: object
+      required: [clip_id, filename, status, created_at]
+      properties:
+        clip_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, ready, failed]
+        created_at:
+          type: string
+          format: date-time
+    ClipListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClipSummary'
+    ClipSummary:
+      type: object
+      required: [clip_id, filename, status, created_at]
+      properties:
+        clip_id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, ready, failed]
+        created_at:
+          type: string
+          format: date-time
+        last_analysis_at:
+          type: string
+          format: date-time
+          nullable: true
+        latency_ms:
+          type: integer
+          nullable: true
+    ClipDetailResponse:
+      type: object
+      required: [clip]
+      properties:
+        clip:
+          $ref: '#/components/schemas/ClipSummary'
+        analysis:
+          oneOf:
+            - $ref: '#/components/schemas/AnalysisResponse'
+            - type: 'null'
+    AnalysisRequest:
+      type: object
+      properties:
+        prompt:
+          type: string
+          maxLength: 1000
+      additionalProperties: false
+    AnalysisResponse:
+      type: object
+      required: [clip_id, summary, moments, raw, created_at]
+      properties:
+        clip_id:
+          type: string
+          format: uuid
+        summary:
+          type: string
+        moments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Moment'
+        raw:
+          type: object
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+        latency_ms:
+          type: integer
+          nullable: true
+        prompt:
+          type: string
+          nullable: true
+        error_code:
+          type: string
+          nullable: true
+        error_message:
+          type: string
+          nullable: true
+    Moment:
+      type: object
+      required: [start_s, end_s, label, severity]
+      properties:
+        start_s:
+          type: number
+          minimum: 0
+        end_s:
+          type: number
+          minimum: 0
+        label:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high]
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+externalDocs:
+  description: External service integrations used by ClipNotes backend.
+  url: https://api.mdi.milestonesys.com/api/v1
+
+x-external-apis:
+  hafniaInference:
+    openapi: 3.0.3
+    info:
+      title: Hafnia Inference API
+      version: 0.0.8
+      description: API for vision-language model completions and asset upload.
+    servers:
+      - url: https://api.mdi.milestonesys.com/api/v1
+    security:
+      - ApiKey: []
+    securitySchemes:
+      ApiKey:
+        type: apiKey
+        in: header
+        name: Authorization
+        description: Provide header as `ApiKey <KEY>:<SECRET>`
+    paths:
+      /assets:
+        get:
+          summary: List all assets
+          operationId: listAssets
+        post:
+          summary: Upload an asset (mp4/mkv)
+          operationId: createAsset
+      /assets/{id}:
+        get:
+          summary: Retrieve a single asset
+          operationId: getAsset
+        delete:
+          summary: Delete an asset
+          operationId: deleteAsset
+      /chat/completions:
+        post:
+          summary: Request a chat completion
+          operationId: requestCompletion
+      /chat/completions/{id}:
+        get:
+          summary: Retrieve completion details
+          operationId: getCompletion
+    schemas:
+      AssetResponse:
+        type: object
+        properties:
+          id: { type: string, format: uuid }
+          name: { type: string }
+          created_at: { type: string, format: date-time }
+      ChoicesResponse:
+        type: object
+        properties:
+          id: { type: string, format: uuid }
+          choices:
+            type: array
+            items:
+              type: object
+              properties:
+                index: { type: integer }
+                message:
+                  type: object
+                  properties:
+                    role: { type: string, enum: [assistant] }
+                    content: { type: string }

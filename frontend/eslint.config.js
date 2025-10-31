@@ -11,7 +11,7 @@ const reactJsxRuntime = reactPlugin.configs["jsx-runtime"];
 
 export default [
   {
-    ignores: ["dist", "node_modules"],
+    ignores: ["dist", "node_modules", "build", "coverage", "*.min.js"],
   },
   {
     files: ["src/**/*.{ts,tsx}"],

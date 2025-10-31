@@ -23,8 +23,9 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const isUploading = status === "uploading";
+  const isBusy = status === "uploading" || status === "loading";
 
-  const isAnalyzeDisabled = isUploading || !selectedFile || Boolean(formError);
+  const isAnalyzeDisabled = isBusy || !selectedFile || Boolean(formError);
 
   const validateFile = (file: File | null): string | null => {
     if (!file) {
@@ -90,7 +91,7 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
       onSubmit={handleSubmit}
       noValidate
     >
-      <fieldset className="flex flex-col gap-4" disabled={isUploading}>
+  <fieldset className="flex flex-col gap-4" disabled={isBusy}>
         <legend className="text-lg font-semibold text-slate-100">Upload clip</legend>
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-slate-200" htmlFor="video-upload">

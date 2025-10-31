@@ -9,7 +9,8 @@ from fastapi import UploadFile
 
 from backend.app.core.logging import get_logger, latency_timer
 from backend.app.models.schemas import SummaryJson, SummaryResponse
-from backend.app.services.hafnia_client import HafniaClient
+from backend.app.services.hafnia_client import HafniaClientProtocol
+from backend.app.services.sessions import SessionRegistry
 
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -27,12 +28,14 @@ class Summarizer:
     def __init__(
         self,
         *,
-        client: HafniaClient,
+        client: HafniaClientProtocol,
         system_prompt: str | None = None,
+        registry: SessionRegistry | None = None,
     ) -> None:
         self._client = client
         self._system_prompt = system_prompt or DEFAULT_SYSTEM_PROMPT
         self._logger = get_logger("summarizer")
+        self._registry = registry
 
     async def process(self, upload_file: UploadFile) -> SummaryResponse:
         """Run the end-to-end summarisation flow for an uploaded video."""
@@ -47,22 +50,45 @@ class Summarizer:
             )
 
         bullets, structured = normalize_summary_payload(raw_payload)
+        completion_id = _extract_completion_id(raw_payload)
         latency_ms = duration()
         completed_at = datetime.now(timezone.utc)
 
         self._logger.info(
             "generated summary",
-            extra={"submission_id": submission_id, "latency_ms": latency_ms},
+            extra={
+                "submission_id": submission_id,
+                "asset_id": asset_id,
+                "completion_id": completion_id,
+                "latency_ms": latency_ms,
+            },
         )
 
         summary_json = SummaryJson(data=structured) if structured else None
 
+        summary_text = bullets or ["No summary available."]
+
+        if not structured:
+            self._logger.warning(
+                "hafnia returned no structured summary",
+                extra={"submission_id": submission_id},
+            )
+
+        if self._registry is not None:
+            self._registry.record_summary(
+                submission_id=submission_id,
+                asset_id=asset_id,
+                completion_id=completion_id,
+            )
+
         return SummaryResponse(
             submission_id=submission_id,
-            summary=bullets or ["No summary available."],
+            asset_id=asset_id,
+            summary=summary_text,
             structured_summary=summary_json,
             latency_ms=latency_ms,
             completed_at=completed_at,
+            completion_id=completion_id,
         )
 
 
@@ -112,3 +138,23 @@ def _split_bullets(text: str) -> list[str]:
         return sentence_parts
 
     return bullets
+
+
+def _extract_completion_id(payload: dict[str, Any]) -> str | None:
+    """Attempt to pull a completion identifier from the Hafnia payload."""
+
+    choices = payload.get("choices")
+    if isinstance(choices, list) and choices:
+        first = choices[0]
+        if isinstance(first, dict):
+            for key in ("completion_id", "id"):
+                value = first.get(key)
+                if isinstance(value, str) and value:
+                    return value
+
+    for key in ("completion_id", "id"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+
+    return None
