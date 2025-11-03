@@ -112,6 +112,9 @@ class ClipStore(Protocol):
     ) -> ClipRecord:
         ...
 
+    async def delete_clip(self, clip_id: UUID) -> None:
+        ...
+
 
 def build_clip_record(*, filename: str) -> ClipRecord:
     """Helper used by stores to create freshly registered clip records."""

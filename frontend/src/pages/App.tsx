@@ -4,11 +4,12 @@ import SessionHistory from "../components/SessionHistory";
 import StatusBanner from "../components/StatusBanner";
 import SummaryPanel from "../components/SummaryPanel";
 import UploadForm from "../components/UploadForm";
+import CompareReason from "./CompareReason";
 import { useAnalyze } from "../hooks/useAnalyze";
 import { useClips } from "../hooks/useClips";
 
 function App() {
-  const { clips, refresh: refreshClips, isLoading: isClipListLoading } = useClips();
+  const { clips, refresh: refreshClips, isLoading: isClipListLoading, error: clipListError } = useClips();
   const { state, analyze, cancel, reset, selectSession, sendChat, deleteSession, isLoading } = useAnalyze({
     onClipRegistered: refreshClips,
     onClipsRefreshed: refreshClips,
@@ -57,27 +58,36 @@ function App() {
           </p>
         </header>
 
-        <div className="grid gap-6 lg:grid-cols-[1.35fr,1fr]">
-          <div className="space-y-6">
-            <StatusBanner
-              status={status}
-              fileName={fileName}
-              pendingFileName={pendingFileName}
-              error={error}
-              remediation={remediation}
-              statusChangedAt={statusChangedAt}
-            />
+        <div className="grid gap-10 lg:grid-cols-[1.35fr,1fr]">
+          <div className="space-y-10">
+            <div className="space-y-6">
+              <StatusBanner
+                status={status}
+                fileName={fileName}
+                pendingFileName={pendingFileName}
+                error={error}
+                remediation={remediation}
+                statusChangedAt={statusChangedAt}
+              />
 
-            <UploadForm status={status} onAnalyze={handleAnalyze} onCancel={cancel} onReset={reset} />
+              <UploadForm status={status} onAnalyze={handleAnalyze} onCancel={cancel} onReset={reset} />
 
-            <SummaryPanel
-              status={status}
-              summary={summary}
-              analysis={analysis}
-              error={error}
-              remediation={remediation}
-              fileName={fileName}
-              statusChangedAt={statusChangedAt}
+              <SummaryPanel
+                status={status}
+                summary={summary}
+                analysis={analysis}
+                error={error}
+                remediation={remediation}
+                fileName={fileName}
+                statusChangedAt={statusChangedAt}
+              />
+            </div>
+
+            <CompareReason
+              clips={clips}
+              onRefreshClips={refreshClips}
+              isRefreshing={isLoading || isClipListLoading}
+              error={clipListError}
             />
           </div>
 

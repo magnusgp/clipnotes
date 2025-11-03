@@ -33,9 +33,11 @@ from backend.app.services.hafnia_client import HafniaClientProtocol
 from backend.app.services.sessions import SessionNotFoundError, SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.services.validators import UploadValidationError, validate_upload_file
-from backend.app.store import ClipRecord, ClipStore
+from backend.app.store import ClipNotFoundError, ClipRecord, ClipStore
+from backend.app.reasoning.router import router as reasoning_router
 
 router = APIRouter(prefix="/api", tags=["analysis"])
+router.include_router(reasoning_router)
 system_router = APIRouter(tags=["system"])
 
 
@@ -304,6 +306,7 @@ async def trigger_analysis(
     request: AnalysisRequest | None = None,
     store: ClipStore = Depends(get_store),
     hafnia_client: HafniaAnalysisClientProtocol = Depends(get_hafnia_client),
+    registry: SessionRegistry = Depends(get_session_registry),
 ) -> AnalysisResponse | JSONResponse:
     record = await store.get_clip(clip_id)
     if record is None:
@@ -344,6 +347,20 @@ async def trigger_analysis(
         )
 
     analysis_record = await store.save_analysis(clip_id, payload)
+
+    completion_id = None
+    raw_payload = analysis_record.raw or {}
+    if isinstance(raw_payload, dict):
+        candidate = raw_payload.get("completion_id") or raw_payload.get("id")
+        if isinstance(candidate, str) and candidate:
+            completion_id = candidate
+
+    if record.asset_id:
+        registry.record_summary(
+            submission_id=str(clip_id),
+            asset_id=record.asset_id,
+            completion_id=completion_id,
+        )
 
     if payload.error_code or payload.error_message:
         error_code = _normalize_error_code(payload.error_code or "hafnia_error")
@@ -444,16 +461,39 @@ async def chat(
 async def delete_asset(
     submission_id: str,
     registry: SessionRegistry = Depends(get_session_registry),
+    store: ClipStore = Depends(get_store),
 ) -> Response:
+    session_missing = False
+    session_detail: str | None = None
     try:
         registry.delete(submission_id)
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except SessionNotFoundError as exc:
+        session_missing = True
+        session_detail = str(exc)
+
+    clip_missing = False
+    clip_detail: str | None = None
+    try:
+        submission_uuid = UUID(submission_id)
+    except ValueError:
+        submission_uuid = None
+        clip_missing = True
+        clip_detail = f"Submission {submission_id} is not a valid UUID."
+    if submission_uuid is not None:
+        try:
+            await store.delete_clip(submission_uuid)
+        except ClipNotFoundError as exc:
+            clip_missing = True
+            clip_detail = str(exc)
+
+    if session_missing and clip_missing:
         return _error_response(
             status_code=status.HTTP_404_NOT_FOUND,
             code="submission_not_found",
             message="Submission not found",
-            detail=str(exc),
+            detail=clip_detail or session_detail,
             remediation="Upload the clip again if you need to request more actions.",
             submission_id=submission_id,
         )
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

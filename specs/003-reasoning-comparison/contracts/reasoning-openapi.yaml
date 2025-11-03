@@ -1,0 +1,294 @@
+openapi: 3.0.3
+info:
+  title: ClipNotes Reasoning API (Draft)
+  version: 0.1.0
+paths:
+  /api/reasoning/compare:
+    post:
+      summary: Compare two analyzed clips and return a normalized reasoning answer.
+      operationId: postReasoningCompare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasoningCompareRequest'
+      responses:
+        '200':
+          description: Comparison response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasoningComparisonResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/reasoning/chat:
+    post:
+      summary: Ask follow-up questions about one or more clips.
+      operationId: postReasoningChat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasoningChatRequest'
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasoningChatResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/reasoning/history:
+    get:
+      summary: Retrieve the most recent reasoning exchanges for selected clips.
+      operationId: getReasoningHistory
+      parameters:
+        - in: query
+          name: clip_id
+          schema:
+            type: string
+            format: uuid
+          required: false
+        - in: query
+          name: clip_selection_hash
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: History list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasoningHistoryResponse'
+  /api/reasoning/metrics/{clip_id}:
+    get:
+      summary: Fetch derived metrics for a clip based on stored analysis JSON.
+      operationId: getReasoningMetrics
+      parameters:
+        - in: path
+          name: clip_id
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        '200':
+          description: Metrics payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReasoningMetricsResponse'
+        '404':
+          description: Clip not found or analysis missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+components:
+  schemas:
+    ReasoningCompareRequest:
+      type: object
+      required: [clip_a, clip_b, question]
+      properties:
+        clip_a:
+          type: string
+          format: uuid
+        clip_b:
+          type: string
+          format: uuid
+        question:
+          type: string
+          minLength: 1
+    ReasoningChatRequest:
+      type: object
+      required: [clips, message]
+      properties:
+        clips:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            format: uuid
+        message:
+          type: string
+          minLength: 1
+    ReasoningComparisonResponse:
+      type: object
+      required: [answer, explanation, evidence]
+      properties:
+        answer:
+          type: string
+          enum: [clip_a, clip_b, equal, uncertain]
+        explanation:
+          type: string
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasoningEvidence'
+        metrics:
+          $ref: '#/components/schemas/ReasoningMetricsCore'
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+    ReasoningChatResponse:
+      type: object
+      required: [answer, created_at]
+      properties:
+        answer:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasoningEvidence'
+        clips:
+          type: array
+          items:
+            type: string
+            format: uuid
+    ReasoningHistoryEntry:
+      type: object
+      required: [id, clip_ids, question, answer, created_at, answer_type]
+      properties:
+        id:
+          type: string
+          format: uuid
+        clip_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        question:
+          type: string
+        answer:
+          $ref: '#/components/schemas/ReasoningChatResponse'
+        answer_type:
+          type: string
+          enum: [comparison, chat]
+        created_at:
+          type: string
+          format: date-time
+    ReasoningHistoryResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReasoningHistoryEntry'
+    ReasoningMetricsResponse:
+      type: object
+      required: [clip_id, counts_by_label, durations_by_label, severity_distribution]
+      properties:
+        clip_id:
+          type: string
+          format: uuid
+        counts_by_label:
+          type: object
+          additionalProperties:
+            type: integer
+        durations_by_label:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        severity_distribution:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        object_graph:
+          $ref: '#/components/schemas/GraphPayload'
+    ReasoningMetricsCore:
+      type: object
+      properties:
+        counts_by_label:
+          type: object
+          additionalProperties:
+            type: integer
+        severity_distribution:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+    ReasoningEvidence:
+      type: object
+      required: [clip_id, label]
+      properties:
+        clip_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        timestamp_range:
+          type: array
+          minItems: 2
+          maxItems: 2
+          items:
+            type: number
+            format: float
+        description:
+          type: string
+    GraphPayload:
+      type: object
+      required: [nodes, edges]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [id, label]
+            properties:
+              id:
+                type: string
+              label:
+                type: string
+              metadata:
+                type: object
+        edges:
+          type: array
+          items:
+            type: object
+            required: [source, target]
+            properties:
+              source:
+                type: string
+              target:
+                type: string
+              relation:
+                type: string
+              metadata:
+                type: object
+    StandardError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string

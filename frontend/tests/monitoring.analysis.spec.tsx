@@ -1,7 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "../src/pages/App";
+
+function renderApp() {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  );
+}
 
 function getRequestUrl(input: RequestInfo | URL): string {
   if (typeof input === "string") {
@@ -98,7 +108,7 @@ describe("Clip analysis flow", () => {
       throw new Error(`Unexpected fetch call to ${url} (${method})`);
     });
 
-    render(<App />);
+  renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     fireEvent.change(fileInput, {

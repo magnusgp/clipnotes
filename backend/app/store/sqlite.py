@@ -9,7 +9,7 @@ from uuid import UUID
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, select
 from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.store.base import (
     AnalysisPayload,
@@ -22,11 +22,8 @@ from backend.app.store.base import (
     build_clip_record,
 )
 
-
-class Base(DeclarativeBase):
-    """Base declarative class for store models."""
-
-
+from backend.app.db import Base
+from backend.app.models import reasoning_history as reasoning_history_models  # noqa: F401
 class ClipModel(Base):
     __tablename__ = "clips"
 
@@ -195,6 +192,17 @@ class SqliteStore(ClipStore):
             row = result.scalars().first()
 
         return self._to_analysis(row) if row is not None else None
+
+    async def delete_clip(self, clip_id: UUID) -> None:
+        await self._ensure_schema()
+
+        async with self._sessions() as session:
+            row = await session.get(ClipModel, str(clip_id))
+            if row is None:
+                raise ClipNotFoundError(clip_id)
+
+            await session.delete(row)
+            await session.commit()
 
     async def close(self) -> None:
         await self._engine.dispose()

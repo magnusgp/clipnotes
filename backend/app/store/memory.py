@@ -116,3 +116,10 @@ class InMemoryStore(ClipStore):
             if not analyses:
                 return None
             return replace(analyses[-1])
+
+    async def delete_clip(self, clip_id: UUID) -> None:
+        async with self._lock:
+            if clip_id not in self._clips:
+                raise ClipNotFoundError(clip_id)
+            self._clips.pop(clip_id)
+            self._analyses.pop(clip_id, None)

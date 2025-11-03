@@ -1,8 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "../src/pages/App";
 import { setupAnalyzeFlowMock, type MockAnalyzeFlow } from "./test-utils/mockAnalyzeFlow";
+
+function renderApp() {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  );
+}
 
 describe("Session history interactions", () => {
   afterEach(() => {
@@ -65,7 +75,7 @@ describe("Session history interactions", () => {
 
     const fetchSpy = setupAnalyzeFlowMock(flows);
 
-    render(<App />);
+  renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     const analyzeButton = screen.getByRole("button", { name: /analyze clip/i });
@@ -151,7 +161,7 @@ describe("Session history interactions", () => {
       return undefined;
     });
 
-    render(<App />);
+  renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     fireEvent.change(fileInput, { target: { files: [new File(["video"], "clip-one.mp4", { type: "video/mp4" })] } });
@@ -214,7 +224,7 @@ describe("Session history interactions", () => {
       return undefined;
     });
 
-    render(<App />);
+  renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     fireEvent.change(fileInput, { target: { files: [new File(["video"], "clip-one.mp4", { type: "video/mp4" })] } });

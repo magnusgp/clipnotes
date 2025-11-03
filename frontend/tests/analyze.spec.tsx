@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 
 import UploadForm from "../src/components/UploadForm";
 import App from "../src/pages/App";
@@ -28,6 +30,11 @@ function renderUploadForm(overrides?: Partial<React.ComponentProps<typeof Upload
     ...render(<UploadForm {...props} />),
     props,
   };
+}
+
+function withQueryClient(children: ReactNode) {
+  const queryClient = new QueryClient();
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 describe("UploadForm", () => {
@@ -115,7 +122,7 @@ describe("App", () => {
       throw new Error(`Unexpected fetch call to ${url} (${method})`);
     });
 
-    render(<App />);
+  render(withQueryClient(<App />));
 
     expect(screen.getByTestId("status-banner")).toHaveTextContent(/ready to analyze/i);
 
@@ -179,7 +186,7 @@ describe("App", () => {
 
     const fetchSpy = setupAnalyzeFlowMock(flows);
 
-    render(<App />);
+  render(withQueryClient(<App />));
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     const validFile = new File(["video"], "clip.mp4", { type: "video/mp4" });

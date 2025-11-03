@@ -20,6 +20,7 @@ async def test_trigger_analysis_persists_result(memory_store):
     from backend.app.services.hafnia import FakeHafniaClient
 
     clip = await memory_store.create_clip(filename="dock.mp4")
+    await memory_store.attach_asset(clip.id, asset_id="asset-dock")
     client = FakeHafniaClient(latency_ms=3200)
 
     app.dependency_overrides[deps.get_store] = lambda: memory_store
@@ -55,6 +56,7 @@ async def test_get_analysis_returns_latest_payload(memory_store):
     from backend.app.services.hafnia import FakeHafniaClient
 
     clip = await memory_store.create_clip(filename="marina.mp4")
+    await memory_store.attach_asset(clip.id, asset_id="asset-marina")
     client = FakeHafniaClient(latency_ms=2100)
 
     app.dependency_overrides[deps.get_store] = lambda: memory_store
@@ -81,6 +83,7 @@ async def test_trigger_analysis_handles_errors(memory_store):
     from backend.app.services.hafnia import FakeHafniaClient
 
     clip = await memory_store.create_clip(filename="failed.mp4")
+    await memory_store.attach_asset(clip.id, asset_id="asset-failed")
     client = FakeHafniaClient()
     client.set_next_error(code="hafnia_unavailable", message="Service offline")
 

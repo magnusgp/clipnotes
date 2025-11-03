@@ -1,8 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "../src/pages/App";
 import { setupAnalyzeFlowMock, type MockAnalyzeFlow } from "./test-utils/mockAnalyzeFlow";
+
+function renderApp() {
+  const queryClient = new QueryClient();
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>,
+  );
+}
 
 describe("Clip registration flow", () => {
   afterEach(() => {
@@ -48,7 +58,7 @@ describe("Clip registration flow", () => {
       return undefined;
     });
 
-    render(<App />);
+  renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     fireEvent.change(fileInput, {

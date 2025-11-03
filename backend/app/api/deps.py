@@ -3,6 +3,10 @@ from __future__ import annotations
 from functools import lru_cache
 
 from backend.app.core.config import get_settings
+from backend.app.reasoning.chat import ChatService
+from backend.app.reasoning.client import FakeReasoningClient, HafniaReasoningClient
+from backend.app.reasoning.compare import CompareService, ReasoningClientProtocol
+from backend.app.reasoning.store import ReasoningHistoryStore, SqlAlchemyReasoningHistoryStore
 from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import FakeHafniaClient, HafniaAnalysisClient, HafniaAnalysisClientProtocol
 from backend.app.services.hafnia_client import FakeHafniaService, HafniaClient, HafniaClientProtocol
@@ -58,6 +62,16 @@ def get_store() -> ClipStore:
 
 
 @lru_cache(maxsize=1)
+def _get_reasoning_history_store() -> ReasoningHistoryStore:
+    settings = get_settings()
+    return SqlAlchemyReasoningHistoryStore(settings.database_url)
+
+
+def get_reasoning_history_store() -> ReasoningHistoryStore:
+    return _get_reasoning_history_store()
+
+
+@lru_cache(maxsize=1)
 def _get_cached_conversation_service() -> ConversationService:
     client = _get_hafnia_service_client()
     return ConversationService(registry=_get_session_registry(), client=client)
@@ -65,6 +79,36 @@ def _get_cached_conversation_service() -> ConversationService:
 
 def get_conversation_service() -> ConversationService:
     return _get_cached_conversation_service()
+
+
+@lru_cache(maxsize=1)
+def _get_reasoning_client() -> ReasoningClientProtocol:
+    settings = get_settings()
+    if settings.hafnia_use_fake:
+        return FakeReasoningClient()
+    return HafniaReasoningClient(settings=settings)
+
+
+@lru_cache(maxsize=1)
+def _get_compare_service() -> CompareService:
+    return CompareService(store=_get_store(), client=_get_reasoning_client())
+
+
+def get_compare_service() -> CompareService:
+    return _get_compare_service()
+
+
+@lru_cache(maxsize=1)
+def _get_chat_service() -> ChatService:
+    return ChatService(
+        store=_get_store(),
+        history_store=_get_reasoning_history_store(),
+        client=_get_reasoning_client(),
+    )
+
+
+def get_chat_service() -> ChatService:
+    return _get_chat_service()
 
 
 @lru_cache(maxsize=1)

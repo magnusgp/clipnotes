@@ -32,3 +32,8 @@ Thumbs.db
 
 # UV
 .uv/
+
+# Test files
+*.mp4
+*.avi
+*.mov

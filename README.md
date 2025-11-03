@@ -39,6 +39,8 @@ credentials from `.env`.
 - Frontend lint: `npm run lint`
 - Frontend tests: `npm run test`
 - Frontend monitoring specs: `npm run test -- tests/monitoring.clips.spec.tsx`
+- Compare & Reason backend: `uv run pytest backend/tests/integration/test_reasoning_api.py`
+- Compare & Reason frontend: `pnpm --prefix frontend test --run --filter reasoning`
 
 ## Monitoring Wave 1 Overview
 
