@@ -87,14 +87,14 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
 
   return (
     <form
-      className="rounded-lg border border-slate-800 bg-slate-900/60 p-6 shadow"
+      className="rounded-2xl border border-border-glass bg-surface-glass/70 p-6 shadow-glass backdrop-blur-xl"
       onSubmit={handleSubmit}
       noValidate
     >
-  <fieldset className="flex flex-col gap-4" disabled={isBusy}>
-        <legend className="text-lg font-semibold text-slate-100">Upload clip</legend>
+      <fieldset className="flex flex-col gap-4" disabled={isBusy}>
+        <legend className="text-lg font-semibold text-text-primary">Upload clip</legend>
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200" htmlFor="video-upload">
+          <label className="text-sm font-semibold text-text-secondary/90" htmlFor="video-upload">
             Video file
           </label>
           <input
@@ -104,19 +104,19 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
             type="file"
             accept="video/mp4,video/x-matroska"
             onChange={handleFileChange}
-            className="block w-full cursor-pointer rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
+            className="block w-full cursor-pointer rounded-xl border border-border-glass bg-surface-glass/60 px-3 py-2 text-sm text-text-secondary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/40"
             aria-describedby="video-upload-hint"
           />
-          <p className="text-xs text-slate-400" id="video-upload-hint">
+          <p className="text-xs text-text-secondary/80" id="video-upload-hint">
             Supports MP4 or MKV up to 100 MB and roughly 30 seconds of footage.
           </p>
           {selectedFile ? (
-            <p className="text-xs text-slate-300">
+            <p className="text-xs text-text-secondary">
               Selected: <span className="font-medium">{selectedFile.name}</span> · {formatFileSize(selectedFile.size)}
             </p>
           ) : null}
           {formError ? (
-            <p className="text-sm text-rose-400" role="alert">
+            <p className="text-sm text-rose-300" role="alert">
               {formError}
             </p>
           ) : null}
@@ -124,7 +124,7 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
-            className="inline-flex items-center justify-center rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-full bg-text-primary px-4 py-2 text-sm font-semibold text-surface-canvas transition hover:bg-text-accent focus:outline-none focus:ring-2 focus:ring-accent-primary/40 focus:ring-offset-2 focus:ring-offset-surface-glass disabled:cursor-not-allowed disabled:opacity-60"
             disabled={isAnalyzeDisabled}
           >
             Analyze clip
@@ -133,7 +133,7 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
             <button
               type="button"
               onClick={handleCancel}
-              className="inline-flex items-center justify-center rounded-md border border-slate-500 px-4 py-2 text-sm font-medium text-slate-100 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900"
+              className="inline-flex items-center justify-center rounded-full border border-border-glass px-4 py-2 text-sm font-semibold text-text-primary transition hover:border-accent-primary hover:text-text-accent focus:outline-none focus:ring-2 focus:ring-accent-primary/40 focus:ring-offset-2 focus:ring-offset-surface-glass"
             >
               Cancel
             </button>
@@ -141,7 +141,7 @@ export function UploadForm({ status, onAnalyze, onCancel, onReset }: UploadFormP
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium text-slate-300 transition hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-text-secondary transition hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/30 focus:ring-offset-2 focus:ring-offset-surface-glass disabled:cursor-not-allowed"
             >
               Clear
             </button>

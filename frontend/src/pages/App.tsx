@@ -1,14 +1,29 @@
 import { useCallback } from "react";
+import { BrowserRouter, NavLink, Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import SessionHistory from "../components/SessionHistory";
 import StatusBanner from "../components/StatusBanner";
 import SummaryPanel from "../components/SummaryPanel";
 import UploadForm from "../components/UploadForm";
+import { ThemeToggle } from "../components/ThemeToggle";
+import { Hero } from "../components/Hero";
 import CompareReason from "./CompareReason";
+import Settings from "./Settings";
 import { useAnalyze } from "../hooks/useAnalyze";
 import { useClips } from "../hooks/useClips";
 
-function App() {
+type NavigationItem = {
+  id: string;
+  label: string;
+  path: string;
+};
+
+const NAV_ITEMS: NavigationItem[] = [
+  { id: "monitoring", label: "Monitoring", path: "/" },
+  { id: "settings", label: "Settings", path: "/settings" },
+];
+
+function MonitoringDashboard() {
   const { clips, refresh: refreshClips, isLoading: isClipListLoading, error: clipListError } = useClips();
   const { state, analyze, cancel, reset, selectSession, sendChat, deleteSession, isLoading } = useAnalyze({
     onClipRegistered: refreshClips,
@@ -41,56 +56,43 @@ function App() {
   );
 
   return (
-    <main className="relative min-h-screen bg-slate-950 text-slate-100">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(52,211,153,0.16),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(56,189,248,0.14),transparent_52%)]"
-      />
-      <section className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 py-16">
-        <div
-          aria-hidden
-          className="absolute inset-x-8 top-8 -z-10 h-64 rounded-[3rem] bg-gradient-to-br from-emerald-500/20 via-sky-500/15 to-transparent blur-3xl"
-        />
-        <header className="rounded-3xl border border-slate-800/60 bg-slate-900/60 p-8 shadow-xl shadow-emerald-900/20">
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-100">ClipNotes Monitoring</h1>
-          <p className="mt-2 max-w-2xl text-base text-slate-400">
-            Upload short clips, trigger Hafnia analysis, and review the timeline of key events from one monitoring canvas.
-          </p>
-        </header>
+    <>
+      <Hero />
 
-        <div className="grid gap-10 lg:grid-cols-[1.35fr,1fr]">
-          <div className="space-y-10">
-            <div className="space-y-6">
-              <StatusBanner
-                status={status}
-                fileName={fileName}
-                pendingFileName={pendingFileName}
-                error={error}
-                remediation={remediation}
-                statusChangedAt={statusChangedAt}
-              />
+      <section id="upload" className="grid gap-10 lg:grid-cols-[1.35fr,1fr]">
+        <div className="space-y-8">
+          <div className="space-y-6">
+            <StatusBanner
+              status={status}
+              fileName={fileName}
+              pendingFileName={pendingFileName}
+              error={error}
+              remediation={remediation}
+              statusChangedAt={statusChangedAt}
+            />
 
-              <UploadForm status={status} onAnalyze={handleAnalyze} onCancel={cancel} onReset={reset} />
+            <UploadForm status={status} onAnalyze={handleAnalyze} onCancel={cancel} onReset={reset} />
 
-              <SummaryPanel
-                status={status}
-                summary={summary}
-                analysis={analysis}
-                error={error}
-                remediation={remediation}
-                fileName={fileName}
-                statusChangedAt={statusChangedAt}
-              />
-            </div>
-
-            <CompareReason
-              clips={clips}
-              onRefreshClips={refreshClips}
-              isRefreshing={isLoading || isClipListLoading}
-              error={clipListError}
+            <SummaryPanel
+              status={status}
+              summary={summary}
+              analysis={analysis}
+              error={error}
+              remediation={remediation}
+              fileName={fileName}
+              statusChangedAt={statusChangedAt}
             />
           </div>
 
+          <CompareReason
+            clips={clips}
+            onRefreshClips={refreshClips}
+            isRefreshing={isLoading || isClipListLoading}
+            error={clipListError}
+          />
+        </div>
+
+        <div id="history">
           <SessionHistory
             clips={clips}
             sessions={history}
@@ -100,12 +102,65 @@ function App() {
             onDelete={deleteSession}
           />
         </div>
-
-        <footer className="text-xs text-slate-500">
-          {isLoading || isClipListLoading ? "Processing with Hafnia…" : "Built for rapid training recaps."}
-        </footer>
       </section>
+
+      <footer className="text-xs text-text-secondary">
+        {isLoading || isClipListLoading ? "Processing with Hafnia…" : "Built for rapid training recaps."}
+      </footer>
+    </>
+  );
+}
+
+function AppLayout() {
+  return (
+    <main className="relative min-h-screen overflow-x-hidden bg-surface-canvas text-text-primary">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.18),transparent_55%),radial-gradient(circle_at_85%_10%,rgba(56,189,248,0.18),transparent_52%)]"
+      />
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col gap-12 px-6 py-14">
+        <header className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border-glass bg-surface-glass/70 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.28em] text-text-secondary/80">
+            ClipNotes Monitoring
+          </div>
+          <div className="flex items-center gap-4">
+            <nav className="flex items-center gap-2 text-sm font-semibold" aria-label="Primary">
+              {NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `rounded-md px-3 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-950 ${
+                      isActive ? "bg-emerald-400/20 text-emerald-300" : "text-slate-300 hover:text-slate-100"
+                    }`
+                  }
+                  end={item.path === "/"}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+            </nav>
+            <ThemeToggle />
+          </div>
+        </header>
+
+        <Outlet />
+      </div>
     </main>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<MonitoringDashboard />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

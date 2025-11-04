@@ -107,6 +107,31 @@ def test_normalize_compare_response_parses_payload():
     assert result.metrics.severity_distribution == {"high": 0.6, "medium": 0.4}
 
 
+def test_normalize_compare_response_handles_string_timestamps():
+    clip_b_id = uuid4()
+
+    result = normalize_compare_response(
+        {
+            "answer": "clip_b",
+            "explanation": "Clip B incidents last longer.",
+            "evidence": [
+                {
+                    "clip_id": str(clip_b_id),
+                    "label": "extended congestion",
+                    "timestamp_range": ["00:02", "01:05.5"],
+                }
+            ],
+            "confidence": 1.0,
+        }
+    )
+
+    assert result.answer is ComparisonAnswer.CLIP_B
+    assert len(result.evidence) == 1
+    evidence = result.evidence[0]
+    assert evidence.clip_id == clip_b_id
+    assert evidence.timestamp_range == (2.0, 65.5)
+
+
 def test_normalize_compare_response_handles_invalid_payload():
     clip_a_id = uuid4()
 

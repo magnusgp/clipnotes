@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, type UseMutationResult } from "@tanstack/react-query";
 
+import { api } from "../lib/api";
+
 import type {
   ReasoningChatResponse,
   ReasoningChatPayload,
@@ -158,11 +160,8 @@ export function useReasoningChat(options: UseReasoningChatOptions) {
         clips: clipIds,
       };
 
-      const response = await fetch("/api/reasoning/chat", {
+      const response = await api("/api/reasoning/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "same-origin",
         body: JSON.stringify(payload),
       });

@@ -4,6 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.routes import router as api_router, system_router
 from backend.app.core.config import get_settings
 
+from fastapi.middleware.cors import CORSMiddleware
+import os
+
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "http://localhost:5173")
+PREVIEW_ORIGIN_REGEX = os.getenv("PREVIEW_ORIGIN_REGEX")
 
 def create_app() -> FastAPI:
     settings = get_settings()
@@ -11,17 +16,21 @@ def create_app() -> FastAPI:
 
     frontend_origin = str(settings.frontend_url).rstrip("/")
     origins: set[str] = {frontend_origin, f"{frontend_origin}/"}
+    try:
+        host = settings.frontend_url.split("//")[-1].split("/")[0].split(":")[0]
+        if host in {"localhost", "127.0.0.1"}:
+            origins.update({
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            })
+    except Exception:
+        pass
 
-    host = settings.frontend_url.host
-    if host in {"localhost", "127.0.0.1"}:
-        origins.update({
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
-        })
-
+    
     application.add_middleware(
-        CORSMiddleware,
-        allow_origins=list(origins),
+        middleware_class=CORSMiddleware,
+        allow_origins=[FRONTEND_ORIGIN, *origins],
+        allow_origin_regex=PREVIEW_ORIGIN_REGEX,   # lets Vercel preview URLs through
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

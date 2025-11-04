@@ -7,9 +7,12 @@ from backend.app.reasoning.chat import ChatService
 from backend.app.reasoning.client import FakeReasoningClient, HafniaReasoningClient
 from backend.app.reasoning.compare import CompareService, ReasoningClientProtocol
 from backend.app.reasoning.store import ReasoningHistoryStore, SqlAlchemyReasoningHistoryStore
+from backend.app.services.config_service import ConfigService
+from backend.app.services.config_store import ConfigStore
 from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import FakeHafniaClient, HafniaAnalysisClient, HafniaAnalysisClientProtocol
 from backend.app.services.hafnia_client import FakeHafniaService, HafniaClient, HafniaClientProtocol
+from backend.app.services.key_store import KeyStore
 from backend.app.services.sessions import SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.store import ClipStore, InMemoryStore, SqliteStore
@@ -125,3 +128,31 @@ def get_hafnia_client() -> HafniaAnalysisClientProtocol:
 
 def get_hafnia_upload_client() -> HafniaClientProtocol:
     return _get_hafnia_service_client()
+
+
+@lru_cache(maxsize=1)
+def _get_config_store() -> ConfigStore:
+    settings = get_settings()
+    return ConfigStore(settings.database_url)
+
+
+def get_config_store() -> ConfigStore:
+    return _get_config_store()
+
+
+@lru_cache(maxsize=1)
+def _get_config_service() -> ConfigService:
+    return ConfigService(_get_config_store())
+
+
+def get_config_service() -> ConfigService:
+    return _get_config_service()
+
+
+@lru_cache(maxsize=1)
+def _get_key_store() -> KeyStore:
+    return KeyStore(_get_config_store())
+
+
+def get_key_store() -> KeyStore:
+    return _get_key_store()

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { ReasoningMetricsResponse } from "../types/reasoning";
+import { api } from "../lib/api";
 
 interface MetricsErrorShape {
   error?: {
@@ -38,11 +39,8 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
 }
 
 async function fetchMetrics(clipId: string): Promise<ReasoningMetricsResponse> {
-  const response = await fetch(`/api/reasoning/metrics/${clipId}`, {
+  const response = await api(`/api/reasoning/metrics/${clipId}`, {
     method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
     credentials: "same-origin",
   });
 

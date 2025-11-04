@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { api } from "../lib/api";
+
 export interface ClipListItem {
   clip_id: string;
   filename: string;
@@ -58,7 +60,7 @@ export function useClips() {
     setState((previous) => ({ ...previous, status: "loading", error: undefined }));
 
     try {
-      const response = await fetch("/api/clips", {
+      const response = await api("/api/clips", {
         method: "GET",
         credentials: "same-origin",
       });

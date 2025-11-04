@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 import { FormEvent, useMemo, useState } from "react";
 
 import type { ClipListItem } from "../../hooks/useClips";
@@ -71,7 +72,7 @@ function CompareForm({ clips }: CompareFormProps) {
 
   const renderEvidence = (items: ReasoningEvidence[]) => {
     if (items.length === 0) {
-      return <p className="text-sm text-slate-400">No evidence returned for this comparison.</p>;
+      return <p className="text-sm text-text-secondary/70">No evidence returned for this comparison.</p>;
     }
 
     return (
@@ -83,18 +84,18 @@ function CompareForm({ clips }: CompareFormProps) {
           return (
             <li
               key={`${item.clip_id}-${item.label}-${index}`}
-              className="rounded-lg border border-slate-800/80 bg-slate-900/50 p-3"
+              className="rounded-lg border border-border-glass bg-surface-canvas/60 p-3"
             >
-              <div className="text-sm font-semibold text-slate-100">{item.label}</div>
-              <p className="text-xs text-slate-400">
-                Clip: <span className="font-medium text-slate-100">{clipLabel}</span>
+              <div className="text-sm font-semibold text-text-primary">{item.label}</div>
+              <p className="text-xs text-text-secondary/75">
+                Clip: <span className="font-medium text-text-primary">{clipLabel}</span>
               </p>
               {item.timestamp_range ? (
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-text-secondary/75">
                   Timestamp: {item.timestamp_range[0].toFixed(2)}s – {item.timestamp_range[1].toFixed(2)}s
                 </p>
               ) : null}
-              {item.description ? <p className="text-xs text-slate-400">{item.description}</p> : null}
+              {item.description ? <p className="text-xs text-text-secondary/75">{item.description}</p> : null}
             </li>
           );
         })}
@@ -125,18 +126,18 @@ function CompareForm({ clips }: CompareFormProps) {
   return (
     <div className="space-y-6">
       <form
-        className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow"
+        className="space-y-4 rounded-2xl border border-border-glass bg-surface-canvas/60 p-6 shadow-glass"
         onSubmit={handleSubmit}
         noValidate
       >
         <fieldset className="grid gap-4 md:grid-cols-2" disabled={isPending}>
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-slate-200" htmlFor="compare-clip-a">
+            <label className="text-sm font-semibold text-text-primary" htmlFor="compare-clip-a">
               First clip
             </label>
             <select
               id="compare-clip-a"
-              className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="rounded-lg border border-border-glass bg-surface-canvas/70 px-3 py-2 text-sm text-text-primary focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               value={clipA}
               onChange={(event) => {
                 const value = event.target.value;
@@ -158,12 +159,12 @@ function CompareForm({ clips }: CompareFormProps) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-slate-200" htmlFor="compare-clip-b">
+            <label className="text-sm font-semibold text-text-primary" htmlFor="compare-clip-b">
               Second clip
             </label>
             <select
               id="compare-clip-b"
-              className="rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+              className="rounded-lg border border-border-glass bg-surface-canvas/70 px-3 py-2 text-sm text-text-primary focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
               value={clipB}
               onChange={(event) => {
                 const value = event.target.value;
@@ -186,12 +187,12 @@ function CompareForm({ clips }: CompareFormProps) {
         </fieldset>
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-slate-200" htmlFor="compare-question">
+          <label className="text-sm font-semibold text-text-primary" htmlFor="compare-question">
             Question
           </label>
           <textarea
             id="compare-question"
-            className="min-h-[96px] rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="min-h-[96px] rounded-lg border border-border-glass bg-surface-canvas/70 px-3 py-2 text-sm text-text-primary focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
             value={question}
             onChange={(event) => {
               setQuestion(event.target.value);
@@ -218,7 +219,7 @@ function CompareForm({ clips }: CompareFormProps) {
           {isSuccess ? (
             <button
               type="button"
-              className="text-sm font-medium text-slate-300 underline-offset-4 hover:underline"
+              className="text-sm font-medium text-text-secondary underline-offset-4 hover:underline"
               onClick={() => {
                 reset();
                 setFormError(null);
@@ -231,18 +232,18 @@ function CompareForm({ clips }: CompareFormProps) {
       </form>
 
       {comparisonResult ? (
-        <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow">
+        <section className="space-y-4 rounded-2xl border border-border-glass bg-surface-canvas/60 p-6 shadow-glass">
           <header className="space-y-1">
             <p className="text-xs uppercase tracking-wide text-emerald-400">Answer</p>
-            <h2 className="text-lg font-semibold text-slate-100">{answerLabel ?? comparisonResult.answer.replace("_", " ")}</h2>
-            <p className="text-sm text-slate-300">{comparisonResult.explanation}</p>
+            <h2 className="text-lg font-semibold text-text-primary">{answerLabel ?? comparisonResult.answer.replace("_", " ")}</h2>
+            <p className="text-sm text-text-secondary">{comparisonResult.explanation}</p>
             {confidenceLabel ? (
-              <p className="text-xs text-slate-400">Confidence: {confidenceLabel}</p>
+              <p className="text-xs text-text-secondary/75">Confidence: {confidenceLabel}</p>
             ) : null}
           </header>
 
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold text-slate-200">Evidence</h3>
+            <h3 className="text-sm font-semibold text-text-primary">Evidence</h3>
             {renderEvidence(comparisonResult.evidence)}
           </div>
 
