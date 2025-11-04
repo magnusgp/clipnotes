@@ -26,7 +26,16 @@ def create_app() -> FastAPI:
     except Exception:
         pass
 
-    
+    try:
+        host = settings.frontend_url.split("//")[-1].split("/")[0].split(":")[0]
+        if host in {"localhost", "127.0.0.1"}:
+            origins.update({
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+            })
+    except Exception:
+        pass
+
     application.add_middleware(
         middleware_class=CORSMiddleware,
         allow_origins=[FRONTEND_ORIGIN, *origins],
