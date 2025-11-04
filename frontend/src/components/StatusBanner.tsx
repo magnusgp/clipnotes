@@ -1,4 +1,6 @@
 import type { AnalyzeStatus } from "../hooks/useAnalyze";
+import { Card } from "./Card";
+import { cn } from "../utils/cn";
 
 interface StatusBannerProps {
   status: AnalyzeStatus;
@@ -32,33 +34,33 @@ function StatusBanner({
 
   let title = "Ready to analyze";
   let body: string | null = "Upload an MP4 or MKV under 100 MB to get started.";
-  let toneClass = "border-slate-800 bg-slate-900/60 text-slate-200";
+  let toneClass = "border-border-glass bg-surface-glass text-text-secondary";
 
   switch (status) {
     case "loading": {
       title = "Loading clip details";
       body = "Retrieving the stored summary and timeline for this clip.";
-      toneClass = "border-slate-600/60 bg-slate-900/60 text-slate-100";
+      toneClass = "border-border-glass/80 bg-surface-glass/70 text-text-primary";
       break;
     }
     case "uploading": {
       const label = pendingFileName ?? "your clip";
       title = `Processing ${label}`;
       body = "Sending your clip to Hafnia. Hang tight for a moment.";
-      toneClass = "border-sky-600/60 bg-sky-950/40 text-sky-100";
+      toneClass = "border-accent-primary/50 bg-accent-primary/10 text-text-accent";
       break;
     }
     case "success": {
       const label = fileName ?? "the clip";
       title = `Summary ready for ${label}`;
       body = "Review the highlights and structured insights below.";
-      toneClass = "border-emerald-600/70 bg-emerald-950/30 text-emerald-100";
+      toneClass = "border-accent-secondary/50 bg-accent-secondary/10 text-text-accent";
       break;
     }
     case "error": {
       title = "Hafnia request failed";
       body = error ?? "We ran into an unexpected issue.";
-      toneClass = "border-rose-600/70 bg-rose-950/40 text-rose-100";
+      toneClass = "border-rose-500/80 bg-rose-500/15 text-rose-100";
       break;
     }
     default:
@@ -66,11 +68,12 @@ function StatusBanner({
   }
 
   return (
-    <section
+    <Card
+      interactive={false}
+      className={cn("p-5 text-sm", toneClass)}
       data-testid="status-banner"
       role="status"
       aria-live="polite"
-      className={`flex flex-col gap-1 rounded-lg border px-4 py-3 text-sm shadow ${toneClass}`}
     >
       <div className="flex items-center gap-2">
         {status === "uploading" || status === "loading" ? (
@@ -79,21 +82,21 @@ function StatusBanner({
             className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent"
           />
         ) : null}
-        <p className="font-semibold">{title}</p>
+        <p className="font-semibold text-text-primary">{title}</p>
       </div>
-      {body ? <p className="text-xs opacity-90">{body}</p> : null}
+      {body ? <p className="text-xs text-text-secondary/90">{body}</p> : null}
       {status === "error" && remediation ? (
-        <p className="text-xs opacity-80">Next steps: {remediation}</p>
+        <p className="text-xs text-rose-100/80">Next steps: {remediation}</p>
       ) : null}
       {formattedTimestamp ? (
-        <p className="text-[0.65rem] uppercase tracking-wide text-white/70">
+        <p className="text-[0.65rem] uppercase tracking-wide text-text-secondary/70">
           Last updated: {" "}
           <time data-testid="status-timestamp" dateTime={statusChangedAt}>
             {formattedTimestamp}
           </time>
         </p>
       ) : null}
-    </section>
+    </Card>
   );
 }
 

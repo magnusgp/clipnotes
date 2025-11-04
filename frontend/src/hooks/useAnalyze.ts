@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { api } from "../lib/api";
+
 export type AnalyzeStatus = "idle" | "loading" | "uploading" | "success" | "error";
 
 export interface SummaryJson {
@@ -200,9 +202,8 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
     let registeredClip: ClipRegistration | undefined;
 
     try {
-      const clipResponse = await fetch("/api/clips", {
+  const clipResponse = await api("/api/clips", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ filename: file.name }),
         signal: controller.signal,
@@ -217,7 +218,7 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
       const formData = new FormData();
       formData.append("file", file, file.name);
 
-      const assetResponse = await fetch(`/api/clips/${registeredClip.clip_id}/asset`, {
+  const assetResponse = await api(`/api/clips/${registeredClip.clip_id}/asset`, {
         method: "POST",
         body: formData,
         signal: controller.signal,
@@ -231,7 +232,7 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
       registeredClip = (await assetResponse.json()) as ClipRegistration;
       await optionsRef.current?.onClipRegistered?.(registeredClip);
 
-      const analysisResponse = await fetch(`/api/analysis/${registeredClip.clip_id}`, {
+  const analysisResponse = await api(`/api/analysis/${registeredClip.clip_id}`, {
         method: "POST",
         signal: controller.signal,
         credentials: "same-origin",
@@ -246,11 +247,11 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
 
       setState((previous) => {
         const displayFileName = file.name;
-    const clipRecord = registeredClip;
-    const registeredFileName = clipRecord?.filename ?? file.name;
-    const clipId = clipRecord?.clip_id ?? analysisPayload.clip_id;
-    const rawAssetId = asString(analysisPayload.raw["asset_id"]);
-    const assetId = clipRecord?.asset_id ?? rawAssetId ?? clipId;
+        const clipRecord = registeredClip;
+        const registeredFileName = clipRecord?.filename ?? file.name;
+        const clipId = clipRecord?.clip_id ?? analysisPayload.clip_id;
+        const rawAssetId = asString(analysisPayload.raw["asset_id"]);
+        const assetId = clipRecord?.asset_id ?? rawAssetId ?? clipId;
         const newEntry: SessionEntry = {
           clipId,
           registeredFileName,
@@ -327,9 +328,8 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
     }));
 
     try {
-      const response = await fetch("/api/chat", {
+  const response = await api("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         body: JSON.stringify({ submission_id: submissionId, prompt: trimmedPrompt }),
       });
@@ -427,7 +427,7 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
     }));
 
     try {
-      const response = await fetch(`/api/assets/${submissionId}`, {
+  const response = await api(`/api/assets/${submissionId}`, {
         method: "DELETE",
         credentials: "same-origin",
       });
@@ -565,7 +565,7 @@ function useAnalyzeInternal(options?: UseAnalyzeOptions) {
     }
 
     try {
-      const response = await fetch(`/api/clips/${submissionId}`, {
+  const response = await api(`/api/clips/${submissionId}`, {
         method: "GET",
         credentials: "same-origin",
       });

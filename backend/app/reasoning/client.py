@@ -149,20 +149,34 @@ class HafniaReasoningClient(ReasoningClientProtocol):
 
     @staticmethod
     def _loads_relaxed(text: str) -> Any:
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            sanitized = text
-            for _ in range(3):  # keep attempts bounded
-                updated = _RELAX_JSON_TRAILING_COMMAS.sub("", sanitized)
-                if updated == sanitized:
-                    break
-                sanitized = updated
-                try:
-                    return json.loads(sanitized)
-                except json.JSONDecodeError:
-                    continue
-            return None
+        def try_load(candidate: str) -> Any | None:
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                return None
+
+        queue: list[str] = [text]
+        seen: set[str] = set()
+
+        while queue:
+            current = queue.pop()
+            if current in seen:
+                continue
+            seen.add(current)
+
+            parsed = try_load(current)
+            if parsed is not None:
+                return parsed
+
+            sanitized = _RELAX_JSON_TRAILING_COMMAS.sub("", current)
+            if sanitized != current and sanitized not in seen:
+                queue.append(sanitized)
+
+            quoted = _RELAX_JSON_TIME_VALUES.sub(_quote_time_value, current)
+            if quoted != current and quoted not in seen:
+                queue.append(quoted)
+
+        return None
 
     def _extract_payload(
         self, payload: Any
@@ -331,6 +345,18 @@ class HafniaReasoningClient(ReasoningClientProtocol):
 
 
 _RELAX_JSON_TRAILING_COMMAS = re.compile(r",(?=\s*[}\]])")
+
+
+_RELAX_JSON_TIME_VALUES = re.compile(
+    r"(?P<prefix>[:\[,]\s*)(?P<time>(?:\d{1,2}:){1,2}\d{2}(?:\.\d{1,3})?)(?P<suffix>\s*)(?=[,\]}])"
+)
+
+
+def _quote_time_value(match: re.Match[str]) -> str:
+    prefix = match.group("prefix")
+    time_value = match.group("time")
+    suffix = match.group("suffix")
+    return f"{prefix}\"{time_value}\"{suffix}"
 
 
 class FakeReasoningClient(ReasoningClientProtocol):

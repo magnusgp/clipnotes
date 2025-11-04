@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: ClipNotes Config & Metrics API (Draft)
+  version: 0.1.0
+paths:
+  /api/config:
+    get:
+      summary: Retrieve operator configuration and flags.
+      operationId: getConfig
+      responses:
+        '200':
+          description: Current configuration values.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+    put:
+      summary: Update operator-configurable parameters.
+      operationId: putConfig
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigUpdateRequest'
+      responses:
+        '200':
+          description: Updated configuration summary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/config/flags:
+    get:
+      summary: Retrieve feature flag status only.
+      operationId: getFlags
+      responses:
+        '200':
+          description: Flag payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagsResponse'
+  /api/keys/hafnia:
+    get:
+      summary: Check whether a Hafnia API key is configured.
+      operationId: getHafniaKeyStatus
+      responses:
+        '200':
+          description: Key status indicator.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyStatusResponse'
+    post:
+      summary: Store or rotate a Hafnia API key for demo use.
+      operationId: postHafniaKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HafniaKeyRequest'
+      responses:
+        '200':
+          description: Key accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyStatusResponse'
+        '400':
+          description: Validation failure.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/metrics:
+    get:
+      summary: Retrieve usage and latency metrics for dashboard.
+      operationId: getMetrics
+      parameters:
+        - in: query
+          name: window
+          schema:
+            type: string
+            enum: ["12h", "24h", "7d"]
+          required: false
+      responses:
+        '200':
+          description: Metrics snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+components:
+  schemas:
+    ConfigResponse:
+      type: object
+      required: [model, flags]
+      properties:
+        model:
+          $ref: '#/components/schemas/ModelParams'
+        flags:
+          $ref: '#/components/schemas/Flags'
+        theme:
+          type: object
+          additionalProperties: true
+          nullable: true
+    ConfigUpdateRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/ModelParams'
+        flags:
+          $ref: '#/components/schemas/Flags'
+        theme:
+          type: object
+          additionalProperties: true
+      additionalProperties: false
+    ModelParams:
+      type: object
+      required: [fps, temperature]
+      properties:
+        fps:
+          type: integer
+          minimum: 1
+          maximum: 120
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+        default_prompt:
+          type: string
+          maxLength: 500
+          nullable: true
+    Flags:
+      type: object
+      properties:
+        ENABLE_LIVE_MODE:
+          type: boolean
+        ENABLE_GRAPH_VIEW:
+          type: boolean
+      additionalProperties:
+        type: boolean
+    FlagsResponse:
+      type: object
+      required: [flags]
+      properties:
+        flags:
+          $ref: '#/components/schemas/Flags'
+    KeyStatusResponse:
+      type: object
+      required: [configured]
+      properties:
+        configured:
+          type: boolean
+        last_updated:
+          type: string
+          format: date-time
+          nullable: true
+    HafniaKeyRequest:
+      type: object
+      required: [key]
+      properties:
+        key:
+          type: string
+          minLength: 10
+          maxLength: 128
+    MetricsResponse:
+      type: object
+      required: [generated_at, total_clips, total_analyses, avg_latency_ms, requests_today, clips_today, per_hour, per_day]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        total_clips:
+          type: integer
+        total_analyses:
+          type: integer
+        avg_latency_ms:
+          type: number
+        requests_today:
+          type: integer
+        clips_today:
+          type: integer
+        per_hour:
+          type: array
+          items:
+            type: object
+            required: [hour, requests]
+            properties:
+              hour:
+                type: string
+              requests:
+                type: integer
+        per_day:
+          type: array
+          items:
+            type: object
+            required: [date, requests, analyses]
+            properties:
+              date:
+                type: string
+              requests:
+                type: integer
+              analyses:
+                type: integer
+        latency_flag:
+          type: boolean
+        error_rate:
+          type: number
+          nullable: true
+    StandardError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            detail:
+              type: string
+              nullable: true

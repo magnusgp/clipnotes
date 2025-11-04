@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 import math
+import re
 from typing import Any, Iterable, Protocol, Sequence
 from uuid import UUID
 
@@ -269,13 +270,39 @@ def _normalize_evidence(candidate: Any) -> list[ReasoningEvidence]:
     return evidence
 
 
+_TIME_TOKEN = re.compile(r"^\s*(?P<minutes>\d{1,2}):(?P<seconds>\d{2})(?:\.(?P<fraction>\d{1,3}))?\s*$")
+
+
+def _coerce_timestamp(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if not stripped:
+            return None
+        match = _TIME_TOKEN.match(stripped)
+        if match:
+            minutes = int(match.group("minutes"))
+            seconds = int(match.group("seconds"))
+            fraction = match.group("fraction")
+            total = minutes * 60 + seconds
+            if fraction:
+                total += int(fraction) / (10 ** len(fraction))
+            return float(total)
+        try:
+            return float(stripped)
+        except ValueError:
+            return None
+    return None
+
+
 def _normalize_timestamp_range(candidate: Any) -> tuple[float, float] | None:
     if not isinstance(candidate, Sequence) or len(candidate) != 2:
         return None
-    try:
-        start = float(candidate[0])
-        end = float(candidate[1])
-    except (TypeError, ValueError):
+
+    start = _coerce_timestamp(candidate[0])
+    end = _coerce_timestamp(candidate[1])
+    if start is None or end is None:
         return None
     return (start, end)
 

@@ -1,16 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "../src/pages/App";
+import { withProviders } from "./test-utils/providers";
 
 function renderApp() {
-  const queryClient = new QueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>,
-  );
+  const { element } = withProviders(<App />);
+  return render(element);
 }
 
 function getRequestUrl(input: RequestInfo | URL): string {
@@ -120,7 +116,7 @@ describe("Clip analysis flow", () => {
     expect(await screen.findByText(/summary ready for clip-to-register.mp4/i)).toBeInTheDocument();
     expect(await screen.findByText(/analysis for dock.mp4/i)).toBeInTheDocument();
 
-    const registeredClip = await screen.findByText(/dock.mp4/i);
+  const registeredClip = await screen.findByTitle("dock.mp4");
     expect(registeredClip).toBeInTheDocument();
 
     expect(fetchSpy).toHaveBeenCalledWith(expect.stringMatching(/\/api\/clips$/), expect.objectContaining({ method: "POST" }));

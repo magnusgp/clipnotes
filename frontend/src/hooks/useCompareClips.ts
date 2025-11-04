@@ -4,6 +4,7 @@ import type {
   ReasoningComparePayload,
   ReasoningComparisonResponse,
 } from "../types/reasoning";
+import { api } from "../lib/api";
 
 interface CompareErrorShape {
   error?: {
@@ -43,11 +44,8 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
 export function useCompareClips() {
   return useMutation<ReasoningComparisonResponse, Error, ReasoningComparePayload>({
     mutationFn: async (payload: ReasoningComparePayload) => {
-      const response = await fetch("/api/reasoning/compare", {
+      const response = await api("/api/reasoning/compare", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "same-origin",
         body: JSON.stringify(payload),
       });

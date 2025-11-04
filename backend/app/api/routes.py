@@ -5,12 +5,21 @@ from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 from fastapi.responses import JSONResponse
 
 from backend.app.api.deps import (
+    get_config_service,
     get_conversation_service,
     get_hafnia_client,
     get_hafnia_upload_client,
+    get_key_store,
     get_session_registry,
     get_store,
     get_summarizer,
+)
+from backend.app.models.config import (
+    ConfigResponse,
+    ConfigUpdateRequest,
+    FlagsResponse,
+    HafniaKeyRequest,
+    KeyStatusResponse,
 )
 from backend.app.models.schemas import (
     AnalysisRequest,
@@ -27,9 +36,11 @@ from backend.app.models.schemas import (
     Moment as MomentSchema,
     SummaryResponse,
 )
+from backend.app.services.config_service import ConfigService
 from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import HafniaAnalysisClientProtocol, HafniaClientError
 from backend.app.services.hafnia_client import HafniaClientProtocol
+from backend.app.services.key_store import KeyStore
 from backend.app.services.sessions import SessionNotFoundError, SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.services.validators import UploadValidationError, validate_upload_file
@@ -44,6 +55,83 @@ system_router = APIRouter(tags=["system"])
 @system_router.get("/healthz", include_in_schema=False)
 async def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@router.get(
+    "/config",
+    response_model=ConfigResponse,
+    tags=["config"],
+)
+async def get_configuration(
+    config_service: ConfigService = Depends(get_config_service),
+) -> ConfigResponse:
+    return await config_service.get_configuration()
+
+
+@router.put(
+    "/config",
+    response_model=ConfigResponse,
+    responses={400: {"model": ErrorResponse}},
+    tags=["config"],
+)
+async def update_configuration(
+    request: ConfigUpdateRequest,
+    config_service: ConfigService = Depends(get_config_service),
+) -> ConfigResponse | JSONResponse:
+    try:
+        return await config_service.update_configuration(request)
+    except ValueError as exc:
+        return _error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_configuration",
+            message="Configuration update rejected.",
+            detail=str(exc),
+        )
+
+
+@router.get(
+    "/config/flags",
+    response_model=FlagsResponse,
+    tags=["config"],
+)
+async def get_flags(
+    config_service: ConfigService = Depends(get_config_service),
+) -> FlagsResponse:
+    return await config_service.get_flags()
+
+
+@router.get(
+    "/keys/hafnia",
+    response_model=KeyStatusResponse,
+    tags=["config"],
+)
+async def get_hafnia_key_status(
+    key_store: KeyStore = Depends(get_key_store),
+) -> KeyStatusResponse:
+    status_payload = await key_store.get_status()
+    return KeyStatusResponse(configured=status_payload.configured, last_updated=status_payload.last_updated)
+
+
+@router.post(
+    "/keys/hafnia",
+    response_model=KeyStatusResponse,
+    responses={400: {"model": ErrorResponse}},
+    tags=["config"],
+)
+async def post_hafnia_key(
+    request: HafniaKeyRequest,
+    key_store: KeyStore = Depends(get_key_store),
+) -> KeyStatusResponse | JSONResponse:
+    try:
+        status_payload = await key_store.store_key(key=request.key.get_secret_value())
+    except ValueError as exc:
+        return _error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_hafnia_key",
+            message="Provided Hafnia API key is invalid.",
+            detail=str(exc),
+        )
+    return KeyStatusResponse(configured=status_payload.configured, last_updated=status_payload.last_updated)
 
 
 def _normalize_error_code(value: str) -> str:

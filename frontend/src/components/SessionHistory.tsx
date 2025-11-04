@@ -2,6 +2,8 @@ import { FormEvent, useMemo, useState } from "react";
 
 import type { SessionEntry } from "../hooks/useAnalyze";
 import type { ClipListItem } from "../hooks/useClips";
+import { Card } from "./Card";
+import { cn } from "../utils/cn";
 
 interface SessionHistoryProps {
   sessions: SessionEntry[];
@@ -81,26 +83,26 @@ export function SessionHistory({
 
   if (sortedClips.length === 0 && latestSessions.length === 0) {
     return (
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-6 shadow">
+      <Card interactive={false} className="p-6">
         <header className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-100">Session history</h2>
+          <h2 className="text-lg font-semibold text-text-primary">Session history</h2>
         </header>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-text-secondary">
           No processed clips yet. Upload a video to build your session history.
         </p>
-      </section>
+      </Card>
     );
   }
 
   return (
-    <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-6 shadow">
+    <Card interactive={false} className="p-6">
       <header className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-100">Session history</h2>
-        <p className="text-xs text-slate-400">Track chats, revisit summaries, and delete assets.</p>
+        <h2 className="text-lg font-semibold text-text-primary">Session history</h2>
+        <p className="text-xs text-text-secondary">Track chats, revisit summaries, and delete assets.</p>
       </header>
       {sortedClips.length ? (
         <div className="mb-6 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Registered clips</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Registered clips</p>
           <ul className="space-y-2">
             {sortedClips.map((clip) => {
               const { base, extension } = splitFilename(clip.filename);
@@ -109,40 +111,41 @@ export function SessionHistory({
               return (
                 <li
                   key={clip.clip_id}
-                  className={`rounded-md border px-4 py-3 text-sm transition ${
+                  className={cn(
+                    "rounded-2xl border px-4 py-3 text-sm transition-all",
                     isActive
-                      ? "border-emerald-500/70 bg-emerald-950/40"
-                      : "border-slate-800 bg-slate-950/40 hover:border-slate-700"
-                  }`}
+                      ? "border-accent-primary/70 bg-accent-primary/10 text-text-accent shadow-glass"
+                      : "border-border-glass/70 bg-surface-glass/50 text-text-secondary hover:border-accent-primary/40 hover:text-text-primary",
+                  )}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-slate-100">
+                      <p className="font-semibold text-text-primary">
                         <span aria-hidden="true" className="filename-ext" data-ext={extension}>
                           {base}
                         </span>
                         <span className="sr-only">{accessibleName}</span>
                       </p>
-                      <p className="text-xs text-slate-400">Registered {formatTimestamp(clip.created_at)}</p>
+                      <p className="text-xs text-text-secondary/80">Registered {formatTimestamp(clip.created_at)}</p>
                     </div>
-                    <div className="flex flex-col items-end gap-1 text-xs text-slate-300">
-                      <span className="rounded-full border border-slate-600 px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-slate-200">
+                    <div className="flex flex-col items-end gap-1 text-xs text-text-secondary">
+                      <span className="rounded-full border border-border-glass px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
                         {clip.status}
                       </span>
                       {clip.last_analysis_at ? (
-                        <p className="text-slate-400">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
+                        <p className="text-text-secondary/80">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
                       ) : (
-                        <p className="text-slate-500">Awaiting analysis</p>
+                        <p className="text-text-secondary/60">Awaiting analysis</p>
                       )}
                       {typeof clip.latency_ms === "number" ? (
-                        <p className="text-slate-400">Latency {clip.latency_ms} ms</p>
+                        <p className="text-text-secondary/80">Latency {clip.latency_ms} ms</p>
                       ) : null}
                       <button
                         type="button"
                         onClick={() => {
                           void onSelect(clip.clip_id);
                         }}
-                        className="mt-1 rounded-md border border-slate-500 px-3 py-1 text-xs font-medium text-slate-100 transition hover:bg-slate-800"
+                        className="mt-1 rounded-full border border-border-glass px-3 py-1 text-xs font-semibold text-text-primary transition hover:border-accent-primary hover:text-text-accent"
                       >
                         View summary
                       </button>
@@ -152,7 +155,7 @@ export function SessionHistory({
               );
             })}
           </ul>
-          {latestSessions.length ? <hr className="border-slate-800" /> : null}
+          {latestSessions.length ? <hr className="border-border-glass/70" /> : null}
         </div>
       ) : null}
       <ul className="space-y-4">
@@ -168,16 +171,17 @@ export function SessionHistory({
           return (
             <li
               key={session.submissionId}
-              className={`rounded-md border px-4 py-3 text-sm transition ${
+              className={cn(
+                "rounded-2xl border px-4 py-3 text-sm transition-all",
                 isActive
-                  ? "border-emerald-500/70 bg-emerald-950/40"
-                  : "border-slate-800 bg-slate-950/40 hover:border-slate-700"
-              }`}
+                  ? "border-accent-primary/70 bg-accent-primary/10 text-text-accent shadow-glass"
+                  : "border-border-glass/70 bg-surface-glass/50 text-text-secondary hover:border-accent-primary/40 hover:text-text-primary",
+              )}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p
-                    className="font-semibold text-slate-100"
+                    className="font-semibold text-text-primary"
                     title={session.registeredFileName ?? session.fileName ?? undefined}
                   >
                     <span aria-hidden="true" className="filename-ext" data-ext={extension}>
@@ -185,7 +189,7 @@ export function SessionHistory({
                     </span>
                     <span className="sr-only">{accessibleName}</span>
                   </p>
-                  <p className="text-xs text-slate-400">Updated {lastUpdated}</p>
+                  <p className="text-xs text-text-secondary/80">Updated {lastUpdated}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -193,7 +197,7 @@ export function SessionHistory({
                     onClick={() => {
                       void onSelect(session.submissionId);
                     }}
-                    className="rounded-md border border-slate-500 px-3 py-1 text-xs font-medium text-slate-100 transition hover:bg-slate-800"
+                    className="rounded-full border border-border-glass px-3 py-1 text-xs font-semibold text-text-primary transition hover:border-accent-primary hover:text-text-accent"
                   >
                     View summary
                   </button>
@@ -203,7 +207,7 @@ export function SessionHistory({
                       void onDelete(session.submissionId);
                     }}
                     disabled={session.isDeleting}
-                    className="rounded-md border border-rose-500 px-3 py-1 text-xs font-medium text-rose-100 transition hover:bg-rose-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-rose-400/80 px-3 py-1 text-xs font-semibold text-rose-200 transition hover:bg-rose-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {session.isDeleting ? "Deleting…" : "Delete asset"}
                   </button>
@@ -211,13 +215,13 @@ export function SessionHistory({
               </div>
 
               {session.deleteError ? (
-                <p className="mt-2 text-xs text-rose-300">
+                <p className="mt-2 text-xs text-rose-200">
                   {session.deleteError}
                   {session.deleteRemediation ? ` — ${session.deleteRemediation}` : null}
                 </p>
               ) : null}
               <form className="mt-3 flex flex-col gap-2" onSubmit={(event) => handleSubmit(event, session.submissionId)}>
-                <label className="text-xs font-medium text-slate-300" htmlFor={`chat-${session.submissionId}`}>
+                <label className="text-xs font-semibold text-text-secondary/90" htmlFor={`chat-${session.submissionId}`}>
                   Ask a follow-up
                 </label>
                 <textarea
@@ -232,19 +236,19 @@ export function SessionHistory({
                     }))
                   }
                   placeholder="Clarify a moment, request timestamps, etc."
-                  className="resize-none rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-100 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                  className="resize-none rounded-2xl border border-border-glass bg-surface-glass/60 px-3 py-2 text-xs text-text-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/40"
                   disabled={session.isChatting}
                 />
                 <div className="flex items-center justify-between">
                   <button
                     type="submit"
-                    className="rounded-md bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full bg-text-primary px-3 py-1.5 text-xs font-semibold text-surface-canvas transition hover:bg-text-accent disabled:cursor-not-allowed disabled:opacity-60"
                     disabled={session.isChatting}
                   >
                     {session.isChatting ? "Sending…" : "Send follow-up"}
                   </button>
                   {session.chatError ? (
-                    <p className="text-xs text-rose-300">
+                    <p className="text-xs text-rose-200">
                       {session.chatError}
                       {session.chatRemediation ? ` — ${session.chatRemediation}` : null}
                     </p>
@@ -254,15 +258,15 @@ export function SessionHistory({
 
               {session.chats.length ? (
                 <div className="mt-3 space-y-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Conversation</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Conversation</p>
                   <ul className="space-y-2">
                     {session.chats.map((entry) => (
-                      <li key={entry.id} className="rounded-md border border-slate-800 bg-slate-950/50 p-3 text-xs text-slate-200">
-                        <p className="font-semibold text-slate-100">You</p>
-                        <p className="mt-1 whitespace-pre-wrap text-slate-200">{entry.prompt}</p>
-                        <p className="mt-3 font-semibold text-slate-100">Hafnia</p>
-                        <p className="mt-1 whitespace-pre-wrap text-slate-200">{entry.response}</p>
-                        <p className="mt-2 text-[0.65rem] uppercase tracking-wide text-slate-500">
+                      <li key={entry.id} className="rounded-2xl border border-border-glass bg-surface-glass/60 p-3 text-xs text-text-secondary">
+                        <p className="font-semibold text-text-primary">You</p>
+                        <p className="mt-1 whitespace-pre-wrap text-text-secondary">{entry.prompt}</p>
+                        <p className="mt-3 font-semibold text-text-primary">Hafnia</p>
+                        <p className="mt-1 whitespace-pre-wrap text-text-secondary">{entry.response}</p>
+                        <p className="mt-2 text-[0.65rem] uppercase tracking-wide text-text-secondary/70">
                           {formatTimestamp(entry.createdAt)}
                         </p>
                       </li>
@@ -270,9 +274,9 @@ export function SessionHistory({
                   </ul>
                 </div>
               ) : (
-                <div className="mt-3 rounded-md border border-slate-800 bg-slate-950/40 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Suggested follow-ups</p>
-                  <ul className="mt-2 space-y-1 text-xs text-slate-300">
+                <div className="mt-3 rounded-2xl border border-border-glass bg-surface-glass/60 p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Suggested follow-ups</p>
+                  <ul className="mt-2 space-y-1 text-xs text-text-secondary">
                     {FOLLOW_UP_SUGGESTIONS.map((suggestion) => (
                       <li key={suggestion}>• {suggestion}</li>
                     ))}
@@ -283,7 +287,7 @@ export function SessionHistory({
           );
         })}
       </ul>
-    </section>
+    </Card>
   );
 }
 

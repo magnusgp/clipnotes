@@ -1,17 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import App from "../src/pages/App";
 import { setupAnalyzeFlowMock, type MockAnalyzeFlow } from "./test-utils/mockAnalyzeFlow";
+import { withProviders } from "./test-utils/providers";
 
 function renderApp() {
-  const queryClient = new QueryClient();
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>,
-  );
+  const { element } = withProviders(<App />);
+  return render(element);
 }
 
 describe("Session history interactions", () => {
