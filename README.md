@@ -1,4 +1,4 @@
-# ClipNotes ![CI](https://github.com/magnusgp/clipnotes/actions/workflows/ci.yml/badge.svg)
+# ClipNotes ![CI](https://github.com/magnusgp/clipnotes/actions/workflows/ci.yml/badge.svg) ![Ruff](https://img.shields.io/badge/lint-ruff-%23f97316?logo=ruff&logoColor=white) ![Bandit](https://img.shields.io/badge/security-bandit-%230b7285)
 
 > Summaries you can trust, in seconds. ClipNotes turns raw CCTV or dashcam footage into brief, actionable recaps for training, safety, and incident reviews.
 
@@ -9,7 +9,7 @@
 - **SaaS-ready controls** – Tweak Hafnia model parameters, feature flags, and theme preferences in a dedicated settings workspace.
 - **Usage & health metrics** – Track request cadence, clip throughput, and latency warnings from a real-time metrics view.
 
-The platform combines a FastAPI backend (Python 3.11 via `uv`) with a Vite + React frontend styled using Tailwind CSS, shadcn/ui, and Framer Motion.
+The platform combines a FastAPI backend (Python 3.11 via `uv`) with a Vite + React frontend styled using Tailwind CSS, shadcn/ui, and Framer Motion. Production runs a managed Postgres instance on Neon, serves the frontend from Vercel, and deploys the backend on Render.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ The platform combines a FastAPI backend (Python 3.11 via `uv`) with a Vite + Rea
 
    ```bash
    cp .env.example .env
-   # Add Hafnia credentials and optional defaults (ENABLE_LIVE_MODE, ENABLE_GRAPH_VIEW, CLIPNOTES_THEME_DEFAULT)
+   # Add Hafnia credentials, Neon Postgres connection string, and optional defaults (ENABLE_LIVE_MODE, ENABLE_GRAPH_VIEW, CLIPNOTES_THEME_DEFAULT)
    ```
 
 3. **Launch the backend**
@@ -70,7 +70,8 @@ Visit `http://localhost:5173` to access the monitoring console. Vite proxies API
 
 ## Deployment Notes
 
-- Default database lives at `sqlite+aiosqlite:///./clipnotes.db`. Override `DATABASE_URL` for production.
+- Production database uses Neon Postgres; set `DATABASE_URL` accordingly for local development or staging.
+- Frontend deploys to Vercel, while the FastAPI backend runs on Render. Keep credentials and environment variables aligned across both platforms.
 - Set `HAFNIA_USE_FAKE=true` to run against the built-in stub during demos or automated tests.
 - Metrics counters rely on wall-clock UTC; ensure the hosting environment maintains accurate time.
 
@@ -88,18 +89,10 @@ GitHub Actions (`.github/workflows/ci.yml`) executes the same sequence on every 
 
 ## Tech Stack
 
-- **Backend**: FastAPI, SQLAlchemy 2.x, HTTPX, Alembic, Pydantic
-- **Frontend**: React 18, React Router, React Query, Tailwind CSS, shadcn/ui, Framer Motion, Vitest, Testing Library
-- **Tooling**: `uv` for Python dependency management, `pnpm` for workspace installs, GitHub Actions for CI
-
-## Contributing
-
-We welcome improvements that enhance monitoring fidelity, SaaS controls, or user experience. Before opening a pull request:
-
-1. Run the verification commands listed above.
-2. Include screenshots or clips when altering UI flows.
-3. Update relevant docs in `specs/004-design-saas-polish/` or `docs/` when behaviour changes.
-
----
+- **Backend**: FastAPI, SQLAlchemy 2.x, HTTPX, Alembic, Pydantic, asyncpg — deployed to Render
+- **Database**: Postgres on Neon with async connections (asyncpg)
+- **Frontend**: React 18, React Router, React Query, Tailwind CSS, shadcn/ui, Framer Motion, Vitest, Testing Library — deployed to Vercel
+- **CI & Security**: GitHub Actions, Ruff, Bandit
+- **Tooling**: `uv` for Python dependency management, `pnpm` for workspace installs
 
 Need help or curious about the Hafnia integration? Review the OpenAPI contract in `contracts/api.yaml` or reach out via issues. ClipNotes aims to make safety reviews faster—let us know how it can help you.

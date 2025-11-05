@@ -6,7 +6,7 @@ from collections.abc import AsyncIterator
 import pytest
 import pytest_asyncio
 
-from backend.app.db import Base
+from backend.app.db import dispose_engine, ensure_database_ready
 from backend.app.services.config_store import ConfigStore
 from backend.app.services.key_store import KeyStore
 
@@ -15,13 +15,13 @@ DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 @pytest_asyncio.fixture
 async def config_store() -> AsyncIterator[ConfigStore]:
+    await ensure_database_ready(DATABASE_URL)
     store = ConfigStore(DATABASE_URL)
-    async with store._engine.begin() as connection:  # type: ignore[attr-defined]
-        await connection.run_sync(Base.metadata.create_all)
     try:
         yield store
     finally:
         await store.close()
+        await dispose_engine(DATABASE_URL)
 
 
 @pytest.mark.asyncio

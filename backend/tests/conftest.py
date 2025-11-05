@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import replace
 from collections.abc import AsyncIterator
 from typing import Awaitable, Callable
@@ -9,6 +10,10 @@ import pytest
 import pytest_asyncio
 
 from backend.app.store import AnalysisPayload, ClipRecord, InMemoryStore, Moment, SqliteStore
+
+os.environ.setdefault("HAFNIA_API_KEY", "test-key")
+os.environ.setdefault("HAFNIA_BASE_URL", "https://hafnia.example.com")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 
 @pytest_asyncio.fixture

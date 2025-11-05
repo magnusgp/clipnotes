@@ -7,17 +7,15 @@ from typing import Any
 import pytest
 import pytest_asyncio
 
-from backend.app.db import Base
+from backend.app.db import dispose_engine, ensure_database_ready
 from backend.app.services.config_store import ConfigSnapshot, ConfigStore
 
 DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 
 async def _prepare_store() -> ConfigStore:
-    store = ConfigStore(DATABASE_URL)
-    async with store._engine.begin() as connection:  # type: ignore[attr-defined]
-        await connection.run_sync(Base.metadata.create_all)
-    return store
+    await ensure_database_ready(DATABASE_URL)
+    return ConfigStore(DATABASE_URL)
 
 
 @pytest_asyncio.fixture
@@ -27,6 +25,7 @@ async def config_store() -> AsyncIterator[ConfigStore]:
         yield store
     finally:
         await store.close()
+        await dispose_engine(DATABASE_URL)
 
 
 @pytest.mark.asyncio
