@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 from dataclasses import asdict
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, select
-from sqlalchemy.dialects.sqlite import JSON
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy import JSON, DateTime, ForeignKey, Integer, String, Text, select
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.store.base import (
@@ -22,8 +20,9 @@ from backend.app.store.base import (
     build_clip_record,
 )
 
-from backend.app.db import Base
+from backend.app.db import Base, ensure_database_ready, get_sessionmaker
 from backend.app.models import reasoning_history as reasoning_history_models  # noqa: F401
+
 class ClipModel(Base):
     __tablename__ = "clips"
 
@@ -52,15 +51,11 @@ class AnalysisModel(Base):
 
 
 class SqliteStore(ClipStore):
-    """SQLAlchemy-powered store implementation backed by SQLite."""
+    """SQLAlchemy-powered store implementation backed by an async database engine."""
 
     def __init__(self, database_url: str) -> None:
-        self._engine: AsyncEngine = create_async_engine(database_url, echo=False)
-        self._sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(
-            self._engine,
-            expire_on_commit=False,
-        )
-        self._init_lock = asyncio.Lock()
+        self._database_url = database_url
+        self._sessions: async_sessionmaker[AsyncSession] = get_sessionmaker(database_url)
         self._initialized = False
 
     async def create_clip(self, *, filename: str) -> ClipRecord:
@@ -205,17 +200,13 @@ class SqliteStore(ClipStore):
             await session.commit()
 
     async def close(self) -> None:
-        await self._engine.dispose()
+        return None
 
     async def _ensure_schema(self) -> None:
         if self._initialized:
             return
-        async with self._init_lock:
-            if self._initialized:
-                return
-            async with self._engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            self._initialized = True
+        await ensure_database_ready(self._database_url)
+        self._initialized = True
 
     @staticmethod
     def _to_clip(row: ClipModel) -> ClipRecord:

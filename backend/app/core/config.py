@@ -16,7 +16,7 @@ class Settings(BaseModel):
     hafnia_base_url: HttpUrl
     frontend_url: HttpUrl = Field(default=cast(HttpUrl, "http://localhost:5173"))
     api_base_url: HttpUrl = Field(default=cast(HttpUrl, "http://localhost:8000"))
-    database_url: str = Field(default="sqlite+aiosqlite:///./clipnotes.db")
+    database_url: str = Field(default="postgresql+asyncpg://localhost/clipnotes?sslmode=require")
     hafnia_use_fake: bool = Field(default=False)
 
     @property

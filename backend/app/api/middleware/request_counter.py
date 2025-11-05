@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import logging
-import asyncio
 from datetime import datetime, timezone
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from backend.app.db import Base
+from backend.app.db import ensure_database_ready, get_sessionmaker
 from backend.app.models.config import RequestCountModel
 
 logger = logging.getLogger(__name__)
@@ -21,10 +20,9 @@ class RequestCounterMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app, *, database_url: str) -> None:  # type: ignore[override]
         super().__init__(app)
-        self._engine = create_async_engine(database_url, echo=False, future=True)
-        self._sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(self._engine, expire_on_commit=False)
-        self._initialised = False
-        self._schema_lock = asyncio.Lock()
+        self._database_url = database_url
+        self._sessions: async_sessionmaker[AsyncSession] = get_sessionmaker(database_url)
+        self._schema_ready = False
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:  # type: ignore[override]
         if request.method == "OPTIONS":
@@ -73,12 +71,7 @@ class RequestCounterMiddleware(BaseHTTPMiddleware):
             await session.commit()
 
     async def _ensure_schema(self) -> None:
-        if self._initialised:
+        if self._schema_ready:
             return
-
-        async with self._schema_lock:
-            if self._initialised:
-                return
-            async with self._engine.begin() as connection:
-                await connection.run_sync(Base.metadata.create_all)
-            self._initialised = True
+        await ensure_database_ready(self._database_url)
+        self._schema_ready = True

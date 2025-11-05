@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 from collections import defaultdict
 from datetime import date, datetime, time, timedelta, timezone
 
 from sqlalchemy import Select, case, func, select
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from backend.app.db import Base
+from backend.app.db import ensure_database_ready, get_sessionmaker
 from backend.app.models.config import RequestCountModel
 from backend.app.models.metrics import DailyMetricsBucket, HourlyMetricsBucket, MetricsResponse
 from backend.app.store.sqlite import AnalysisModel, ClipModel
@@ -24,16 +23,15 @@ class MetricsService:
         hourly_window: int = 12,
         daily_window: int = 7,
     ) -> None:
-        self._engine = create_async_engine(database_url, echo=False, future=True)
-        self._sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(self._engine, expire_on_commit=False)
+        self._database_url = database_url
+        self._sessions: async_sessionmaker[AsyncSession] = get_sessionmaker(database_url)
         self._latency_threshold = float(latency_warning_threshold_ms)
         self._hourly_window = hourly_window
         self._daily_window = daily_window
-        self._init_lock = asyncio.Lock()
         self._initialized = False
 
     async def close(self) -> None:
-        await self._engine.dispose()
+        return None
 
     async def get_metrics(self, window: str | None = None, *, now: datetime | None = None) -> MetricsResponse:
         await self._ensure_schema()
@@ -85,12 +83,8 @@ class MetricsService:
     async def _ensure_schema(self) -> None:
         if self._initialized:
             return
-        async with self._init_lock:
-            if self._initialized:
-                return
-            async with self._engine.begin() as connection:
-                await connection.run_sync(Base.metadata.create_all)
-            self._initialized = True
+        await ensure_database_ready(self._database_url)
+        self._initialized = True
 
     async def _scalar_count(self, session: AsyncSession, stmt: Select) -> int:
         result = await session.execute(stmt)

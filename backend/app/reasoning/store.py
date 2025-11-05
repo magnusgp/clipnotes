@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol, Sequence
 from uuid import UUID, uuid4
 
 from sqlalchemy import Select, select
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from backend.app.db import Base
+from backend.app.db import ensure_database_ready, get_sessionmaker
 from backend.app.models.reasoning import ReasoningChatResponse
 from backend.app.models.reasoning_history import ReasoningHistoryModel
 
@@ -57,11 +56,8 @@ class SqlAlchemyReasoningHistoryStore(ReasoningHistoryStore):
     """SQLAlchemy-backed history store for persisted reasoning entries."""
 
     def __init__(self, database_url: str) -> None:
-        self._engine: AsyncEngine = create_async_engine(database_url, echo=False)
-        self._sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(
-            self._engine, expire_on_commit=False
-        )
-        self._init_lock = asyncio.Lock()
+        self._database_url = database_url
+        self._sessions: async_sessionmaker[AsyncSession] = get_sessionmaker(database_url)
         self._initialized = False
 
     async def list_recent(
@@ -123,17 +119,13 @@ class SqlAlchemyReasoningHistoryStore(ReasoningHistoryStore):
         return self._to_record(model)
 
     async def close(self) -> None:
-        await self._engine.dispose()
+        return None
 
     async def _ensure_schema(self) -> None:
         if self._initialized:
             return
-        async with self._init_lock:
-            if self._initialized:
-                return
-            async with self._engine.begin() as connection:
-                await connection.run_sync(Base.metadata.create_all)
-            self._initialized = True
+        await ensure_database_ready(self._database_url)
+        self._initialized = True
 
     def _build_select_statement(
         self,

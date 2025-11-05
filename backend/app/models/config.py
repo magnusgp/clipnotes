@@ -4,8 +4,7 @@ from datetime import date as date_type
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import Date, DateTime, Integer, String, Text
-from sqlalchemy.dialects.sqlite import JSON
+from sqlalchemy import JSON, Date, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from backend.app.db import Base

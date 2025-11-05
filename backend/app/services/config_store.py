@@ -6,9 +6,10 @@ from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from typing import Any, Mapping, MutableMapping, cast
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from backend.app.models.config import ConfigModel
+from backend.app.db import ensure_database_ready, get_sessionmaker
 
 _GLOBAL_CONFIG_ID = "global"
 _UNSET = object()
@@ -40,16 +41,15 @@ class ConfigStore:
     """Low-level helper for reading and writing operator configuration in SQLite."""
 
     def __init__(self, database_url: str, *, env: Mapping[str, str] | None = None) -> None:
-        self._engine: AsyncEngine = create_async_engine(database_url, echo=False, future=True)
-        self._sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(
-            self._engine,
-            expire_on_commit=False,
-        )
+        self._database_url = database_url
+        self._sessions: async_sessionmaker[AsyncSession] = get_sessionmaker(database_url)
+        self._schema_ready = False
         self._env: Mapping[str, str] = env if env is not None else cast(MutableMapping[str, str], os.environ)
 
     async def fetch(self) -> ConfigSnapshot:
         """Return the current configuration, seeding defaults when empty."""
 
+        await self._ensure_schema()
         async with self._sessions() as session:
             config = await self._get_or_create(session)
             snapshot = self._to_snapshot(config)
@@ -65,6 +65,7 @@ class ConfigStore:
     ) -> ConfigSnapshot:
         """Persist provided configuration sections and return the refreshed snapshot."""
 
+        await self._ensure_schema()
         async with self._sessions() as session:
             config = await self._get_or_create(session)
 
@@ -88,6 +89,7 @@ class ConfigStore:
     async def store_hafnia_key_hash(self, *, key_hash: str | None, updated_by: str | None = None) -> ConfigSnapshot:
         """Persist the hashed Hafnia API key reference and return the refreshed configuration."""
 
+        await self._ensure_schema()
         async with self._sessions() as session:
             config = await self._get_or_create(session)
             config.hafnia_key_hash = key_hash
@@ -103,6 +105,7 @@ class ConfigStore:
     async def get_key_status(self) -> KeyStatus:
         """Return whether a Hafnia key is configured along with the last update timestamp."""
 
+        await self._ensure_schema()
         async with self._sessions() as session:
             config = await session.get(ConfigModel, _GLOBAL_CONFIG_ID)
             if config is None:
@@ -110,7 +113,7 @@ class ConfigStore:
             return KeyStatus(configured=config.hafnia_key_hash is not None, last_updated=config.updated_at)
 
     async def close(self) -> None:
-        await self._engine.dispose()
+        return None
 
     async def _get_or_create(self, session: AsyncSession) -> ConfigModel:
         config = await session.get(ConfigModel, _GLOBAL_CONFIG_ID)
@@ -128,6 +131,12 @@ class ConfigStore:
         await session.commit()
         await session.refresh(config)
         return config
+
+    async def _ensure_schema(self) -> None:
+        if self._schema_ready:
+            return
+        await ensure_database_ready(self._database_url)
+        self._schema_ready = True
 
     @staticmethod
     def _apply_defaults(config: ConfigModel) -> None:

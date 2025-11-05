@@ -1,8 +1,11 @@
-from uuid import UUID
+import logging
+from datetime import datetime, timezone
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Response, UploadFile, status
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import SQLAlchemyError
 
 from backend.app.api.deps import (
     get_config_service,
@@ -49,6 +52,8 @@ from backend.app.services.summarizer import Summarizer
 from backend.app.services.validators import UploadValidationError, validate_upload_file
 from backend.app.store import ClipNotFoundError, ClipRecord, ClipStore
 from backend.app.reasoning.router import router as reasoning_router
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 router.include_router(reasoning_router)
@@ -121,6 +126,21 @@ async def get_metrics(
             code="invalid_window",
             message="Window parameter is invalid.",
             detail=str(exc),
+        )
+    except SQLAlchemyError:
+        logger.exception("Failed to fetch metrics; returning zeroed response")
+        now = datetime.now(timezone.utc)
+        return MetricsResponse(
+            generated_at=now,
+            total_clips=0,
+            total_analyses=0,
+            avg_latency_ms=0.0,
+            requests_today=0,
+            clips_today=0,
+            per_hour=[],
+            per_day=[],
+            latency_flag=False,
+            error_rate=None,
         )
 
 
