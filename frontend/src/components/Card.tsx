@@ -5,18 +5,24 @@ import clsx from "clsx";
 import { useTheme } from "../theme/ThemeProvider";
 import { glassCardMotion } from "../utils/motion";
 
+type CardSurface = "glass" | "panel";
+
 interface CardProps extends HTMLMotionProps<"div"> {
   interactive?: boolean;
   padded?: boolean;
+  surface?: CardSurface;
 }
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
-  { className, children, interactive = true, padded = true, ...props },
+  { className, children, interactive = true, padded = true, surface, ...props },
   ref,
 ) {
   const { prefersReducedMotion } = useTheme();
   const shouldAnimate = interactive && !prefersReducedMotion;
   const resolvedClassName = typeof className === "string" ? className : undefined;
+  const resolvedSurface: CardSurface = surface ?? (interactive ? "glass" : "panel");
+  const surfaceClass = resolvedSurface === "glass" ? "bg-surface-glass" : "bg-surface-panel";
+  const borderClass = resolvedSurface === "glass" ? "border-border-glass/70" : "border-border-glass/80";
 
   return (
     <motion.div
@@ -25,7 +31,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
       animate={shouldAnimate ? glassCardMotion.animate : undefined}
       whileHover={shouldAnimate ? glassCardMotion.hover : undefined}
       className={clsx(
-        "relative overflow-hidden rounded-glass border border-border-glass/70 bg-surface-glass shadow-glass backdrop-blur-xl transition-colors duration-300",
+        "relative overflow-hidden rounded-glass border shadow-glass backdrop-blur-xl transition-colors duration-300",
+        surfaceClass,
+        borderClass,
         interactive ? "[transform-style:preserve-3d]" : "",
         padded ? "p-6" : "",
         resolvedClassName,
@@ -34,7 +42,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(function Card(
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-accent-primary/10"
+        className={clsx(
+          "pointer-events-none absolute inset-0",
+          resolvedSurface === "glass"
+            ? "bg-gradient-to-br from-white/5 via-transparent to-accent-primary/10"
+            : "bg-transparent",
+        )}
       />
       <div className="relative z-[1]">{children as ReactNode}</div>
     </motion.div>

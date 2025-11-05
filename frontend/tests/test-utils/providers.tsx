@@ -4,9 +4,13 @@ import type { ReactNode } from "react";
 
 import { ThemeProvider } from "../../src/theme/ThemeProvider";
 import { ToastProvider } from "../../src/components/toast/ToastProvider";
+import { FeatureFlagProvider, DEFAULT_FLAGS } from "../../src/flags";
+import type { FeatureFlagMap } from "../../src/types/config";
 
 interface ProviderOptions {
   queryClient?: QueryClient;
+  featureFlags?: FeatureFlagMap;
+  withFeatureFlags?: boolean;
 }
 
 export function createTestQueryClient(): QueryClient {
@@ -25,13 +29,21 @@ export function withProviders(
   options: ProviderOptions = {},
 ): { element: ReactNode; queryClient: QueryClient } {
   const queryClient = options.queryClient ?? createTestQueryClient();
+  const flags = { ...DEFAULT_FLAGS, ...(options.featureFlags ?? {}) };
+  const withFeatureFlags = options.withFeatureFlags ?? true;
 
   return {
     queryClient,
     element: (
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          {withFeatureFlags ? (
+            <FeatureFlagProvider initialFlags={flags}>
+              <ToastProvider>{children}</ToastProvider>
+            </FeatureFlagProvider>
+          ) : (
+            <ToastProvider>{children}</ToastProvider>
+          )}
         </ThemeProvider>
       </QueryClientProvider>
     ),

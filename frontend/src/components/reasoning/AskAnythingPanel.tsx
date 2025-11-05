@@ -1,5 +1,7 @@
 import { FormEvent, useState } from "react";
 
+import { Card, CardContent, CardHeader, CardTitle } from "../Card";
+
 interface AskAnythingPanelProps {
   clipCount: number;
   isSending: boolean;
@@ -47,57 +49,59 @@ function AskAnythingPanel({ clipCount, isSending, onSend, errorMessage, disabled
   };
 
   return (
-    <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 shadow">
-      <header className="space-y-1">
-        <p className="text-xs uppercase tracking-wide text-emerald-400">Ask anything</p>
-        <h2 className="text-lg font-semibold text-slate-100">Continue the conversation</h2>
-        <p className="text-sm text-slate-300">
-          Follow up on the comparison or ask targeted questions about the selected clips. Answers persist in history so you can
-          revisit them later.
+    <Card interactive={false} surface="glass">
+      <CardHeader className="space-y-1">
+        <p className="text-xs uppercase tracking-wide text-accent-primary">Ask anything</p>
+        <CardTitle className="text-lg">Continue the conversation</CardTitle>
+        <p className="text-sm text-text-secondary">
+          Follow up on the comparison or ask targeted questions about the selected clips. Answers persist in history so you
+          can revisit them later.
         </p>
-      </header>
+      </CardHeader>
 
-      <form className="space-y-3" onSubmit={handleSubmit} noValidate>
-        <textarea
-          className="min-h-[96px] w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400"
-          value={message}
-          onChange={(event) => {
-            setMessage(event.target.value);
-            setLocalError(null);
-            setSuccessState(null);
-          }}
-          placeholder={clipCount ? "What else should we investigate?" : "Select clips to enable follow-up questions."}
-          disabled={disabled}
-        />
+      <CardContent className="space-y-3">
+        <form className="space-y-3" onSubmit={handleSubmit} noValidate>
+          <textarea
+            className="min-h-[96px] w-full rounded-2xl border border-border-glass/75 bg-surface-glass/70 px-3 py-2 text-sm text-text-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/40"
+            value={message}
+            onChange={(event) => {
+              setMessage(event.target.value);
+              setLocalError(null);
+              setSuccessState(null);
+            }}
+            placeholder={clipCount ? "What else should we investigate?" : "Select clips to enable follow-up questions."}
+            disabled={disabled}
+          />
 
-        {localError ? (
-          <p role="alert" className="text-sm text-rose-400">
-            {localError}
-          </p>
-        ) : null}
+          {localError ? (
+            <p role="alert" className="text-sm text-rose-400">
+              {localError}
+            </p>
+          ) : null}
 
-        {errorMessage && !localError ? (
-          <p role="alert" className="text-sm text-rose-400">
-            {errorMessage}
-          </p>
-        ) : null}
+          {errorMessage && !localError ? (
+            <p role="alert" className="text-sm text-rose-400">
+              {errorMessage}
+            </p>
+          ) : null}
 
-        {successState ? <p className="text-xs text-emerald-400">{successState}</p> : null}
+          {successState ? <p className="text-xs text-emerald-500">{successState}</p> : null}
 
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-md bg-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-950 transition hover:bg-emerald-300 focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={!canSubmit}
-          >
-            {isSending ? "Sending…" : "Send follow-up"}
-          </button>
-          <span className="text-xs text-slate-400">
-            {clipCount > 0 ? `Active selection: ${clipCount} clip${clipCount === 1 ? "" : "s"}.` : "No clips selected."}
-          </span>
-        </div>
-      </form>
-    </section>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center rounded-full bg-text-primary px-4 py-2 text-sm font-semibold text-surface-canvas transition hover:bg-text-accent focus:outline-none focus:ring-2 focus:ring-accent-primary/40 focus:ring-offset-2 focus:ring-offset-surface-glass disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={!canSubmit}
+            >
+              {isSending ? "Sending…" : "Send follow-up"}
+            </button>
+            <span className="text-xs text-text-secondary/75">
+              {clipCount > 0 ? `Active selection: ${clipCount} clip${clipCount === 1 ? "" : "s"}.` : "No clips selected."}
+            </span>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

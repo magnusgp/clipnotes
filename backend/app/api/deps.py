@@ -13,6 +13,7 @@ from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import FakeHafniaClient, HafniaAnalysisClient, HafniaAnalysisClientProtocol
 from backend.app.services.hafnia_client import FakeHafniaService, HafniaClient, HafniaClientProtocol
 from backend.app.services.key_store import KeyStore
+from backend.app.services.metrics_service import MetricsService
 from backend.app.services.sessions import SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.store import ClipStore, InMemoryStore, SqliteStore
@@ -156,3 +157,13 @@ def _get_key_store() -> KeyStore:
 
 def get_key_store() -> KeyStore:
     return _get_key_store()
+
+
+@lru_cache(maxsize=1)
+def _get_metrics_service() -> MetricsService:
+    settings = get_settings()
+    return MetricsService(settings.database_url)
+
+
+def get_metrics_service() -> MetricsService:
+    return _get_metrics_service()

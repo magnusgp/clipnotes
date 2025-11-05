@@ -105,18 +105,18 @@ accessibility and Vitest coverage when pytest is not applicable.
 
 ### Tests for User Story 3
 
-- [ ] T028 [P] [US3] Add pytest unit tests for metrics aggregation in `backend/tests/unit/test_metrics_service.py` (per-hour/day buckets, latency flag).
-- [ ] T029 [P] [US3] Add Vitest polling tests in `frontend/tests/metrics/metrics-page.test.tsx` (refresh cadence, warning state).
+- [x] T028 [P] [US3] Add pytest unit tests for metrics aggregation in `backend/tests/unit/test_metrics_service.py` (per-hour/day buckets, latency flag).
+- [x] T029 [P] [US3] Add Vitest polling tests in `frontend/tests/metrics/metrics-page.test.tsx` (refresh cadence, warning state).
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Implement request counter middleware in `backend/app/api/middleware/request_counter.py` and register it in `backend/main.py`.
-- [ ] T031 [US3] Build metrics aggregation service in `backend/app/services/metrics_service.py` (totals, averages, per-hour/day breakdowns).
-- [ ] T032 [US3] Expose `/api/metrics` route in `backend/app/api/routes.py` returning MetricsResponse schema.
-- [ ] T033 [US3] Create TypeScript types and hook in `frontend/src/types/metrics.ts` and `frontend/src/hooks/useMetrics.ts` for polling data.
-- [ ] T034 [US3] Build metrics components `frontend/src/components/metrics/StatsTiles.tsx` and `frontend/src/components/metrics/UsageSparkline.tsx` with Framer Motion reveals.
-- [ ] T035 [US3] Implement Metrics page in `frontend/src/pages/Metrics.tsx` and register navigation entry.
-- [ ] T036 [US3] Introduce `/api/config/flags` client in `frontend/src/flags.ts` and conditionally render Metrics and live-mode UI sections.
+- [x] T030 [US3] Implement request counter middleware in `backend/app/api/middleware/request_counter.py` and register it in `backend/main.py`.
+- [x] T031 [US3] Build metrics aggregation service in `backend/app/services/metrics_service.py` (totals, averages, per-hour/day breakdowns).
+- [x] T032 [US3] Expose `/api/metrics` route in `backend/app/api/routes.py` returning MetricsResponse schema.
+- [x] T033 [US3] Create TypeScript types and hook in `frontend/src/types/metrics.ts` and `frontend/src/hooks/useMetrics.ts` for polling data.
+- [x] T034 [US3] Build metrics components `frontend/src/components/metrics/StatsTiles.tsx` and `frontend/src/components/metrics/UsageSparkline.tsx` with Framer Motion reveals.
+- [x] T035 [US3] Implement Metrics page in `frontend/src/pages/Metrics.tsx` and register navigation entry.
+- [x] T036 [US3] Introduce `/api/config/flags` client in `frontend/src/flags.ts` and conditionally render Metrics and live-mode UI sections.
 
 **Checkpoint**: User Story 3 enables live metrics monitoring with backend data and animated dashboard.
 
@@ -130,10 +130,10 @@ accessibility and Vitest coverage when pytest is not applicable.
 
 ### Implementation for User Story 4
 
-- [ ] T037 [P] [US4] Add GitHub Actions workflow `.github/workflows/ci.yml` running `uv sync`, `uv run ruff check backend`, `uv run pytest`, `pnpm install`, `pnpm lint`, and `pnpm build`.
-- [ ] T038 [US4] Update npm scripts or config if needed in `frontend/package.json` to support CI commands (build, lint, test filters).
-- [ ] T039 [US4] Add CI status badge and workflow instructions to `README.md` (include troubleshooting notes).
-- [ ] T040 [US4] Record workflow coverage details in `specs/004-design-saas-polish/quickstart.md` (link to CI run for future references).
+- [x] T037 [P] [US4] Add GitHub Actions workflow `.github/workflows/ci.yml` running `uv sync`, `uv run ruff check backend`, `uv run pytest`, `pnpm install`, `pnpm lint`, and `pnpm build`.
+- [x] T038 [US4] Update npm scripts or config if needed in `frontend/package.json` to support CI commands (build, lint, test filters).
+- [x] T039 [US4] Add CI status badge and workflow instructions to `README.md` (include troubleshooting notes).
+- [x] T040 [US4] Record workflow coverage details in `specs/004-design-saas-polish/quickstart.md` (link to CI run for future references).
 
 **Checkpoint**: User Story 4 ensures CI pipelines guard lint/tests/build with visible status.
 
@@ -143,9 +143,9 @@ accessibility and Vitest coverage when pytest is not applicable.
 
 **Purpose**: Final documentation, contract updates, and holistic QA across stories.
 
-- [ ] T041 Update root API contract in `contracts/api.yaml` to include config, flags, keys, and metrics endpoints.
-- [ ] T042 Refresh README demo section with Settings/Metrics screenshots and tour steps in `README.md`.
-- [ ] T043 Document design tokens (fonts, colors, spacing) in `docs/design-tokens.md` and reference new components.
+- [x] T041 Update root API contract in `contracts/api.yaml` to include config, flags, keys, and metrics endpoints.
+- [x] T042 Refresh README demo section with Settings/Metrics screenshots and tour steps in `README.md`.
+- [x] T043 Document design tokens (fonts, colors, spacing) in `docs/design-tokens.md` and reference new components.
 - [ ] T044 Run full verification commands (`uv run pytest`, `pnpm lint`, `pnpm build`) and log outcomes in `specs/004-design-saas-polish/research.md`.
 - [ ] T045 Perform accessibility sweep (keyboard + prefers-reduced-motion) and capture notes in `specs/004-design-saas-polish/research.md`.
 

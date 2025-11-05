@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMutation, type UseMutationResult } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 
-import { api } from "../lib/api";
+import { ApiError, apiRequest } from "../utils/api";
 
 import type {
   ReasoningChatResponse,
@@ -148,42 +148,34 @@ export function useReasoningChat(options: UseReasoningChatOptions) {
     setHistory(stored.slice(-maxEntries));
   }, [storageKey, resolvedStorage, maxEntries]);
 
-  const mutation: UseMutationResult<
-    ReasoningChatResponse,
-    Error,
-    SendMessageArgs,
-    unknown
-  > = useMutation<ReasoningChatResponse, Error, SendMessageArgs, unknown>({
+  const mutation = useMutation<ReasoningChatResponse, unknown, SendMessageArgs, unknown>({
     mutationFn: async ({ message }: SendMessageArgs) => {
       const payload: ReasoningChatPayload = {
         message,
         clips: clipIds,
       };
 
-      const response = await api("/api/reasoning/chat", {
-        method: "POST",
-        credentials: "same-origin",
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const fallback = `Unable to send follow-up (status ${response.status})`;
-        try {
-          const parsed = (await response.json()) as ErrorShape;
-          throw new Error(extractErrorMessage(parsed, fallback));
-        } catch (error) {
-          if (error instanceof Error) {
-            throw error;
-          }
-          throw new Error(fallback);
+      try {
+        return await apiRequest<ReasoningChatResponse>("/api/reasoning/chat", {
+          method: "POST",
+          credentials: "same-origin",
+          json: payload,
+        });
+      } catch (cause) {
+        if (cause instanceof ApiError) {
+          const fallback = `Unable to send follow-up (status ${cause.status})`;
+          throw new Error(extractErrorMessage(cause.payload, fallback));
         }
+        if (cause instanceof Error) {
+          throw cause;
+        }
+        throw new Error("Unable to send follow-up.");
       }
-
-      return (await response.json()) as ReasoningChatResponse;
     },
   });
 
-  const { mutateAsync, isPending, error } = mutation;
+  const { mutateAsync, isPending, error: rawError } = mutation;
+  const normalizedError = rawError instanceof Error ? rawError : rawError ? new Error("Unable to send follow-up.") : null;
 
   const persistHistory = useCallback(
     (entries: ReasoningHistoryEntry[]) => {
@@ -257,7 +249,7 @@ export function useReasoningChat(options: UseReasoningChatOptions) {
     history,
     sendMessage,
     isSending: isPending,
-    error,
+  error: normalizedError,
     clearHistory,
     adoptHistory,
   };

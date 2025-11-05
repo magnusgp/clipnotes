@@ -116,7 +116,7 @@ describe("App", () => {
       throw new Error(`Unexpected fetch call to ${url} (${method})`);
     });
 
-    renderWithProviders(<App />);
+  renderWithProviders(<App loadFlags={false} />, { withFeatureFlags: false });
 
     expect(screen.getByTestId("status-banner")).toHaveTextContent(/ready to analyze/i);
 
@@ -180,7 +180,7 @@ describe("App", () => {
 
     const fetchSpy = setupAnalyzeFlowMock(flows);
 
-    renderWithProviders(<App />);
+  renderWithProviders(<App loadFlags={false} />, { withFeatureFlags: false });
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     const validFile = new File(["video"], "clip.mp4", { type: "video/mp4" });

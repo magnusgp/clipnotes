@@ -83,7 +83,7 @@ export function SessionHistory({
 
   if (sortedClips.length === 0 && latestSessions.length === 0) {
     return (
-      <Card interactive={false} className="p-6">
+      <Card interactive={false} surface="glass">
         <header className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-text-primary">Session history</h2>
         </header>
@@ -95,7 +95,7 @@ export function SessionHistory({
   }
 
   return (
-    <Card interactive={false} className="p-6">
+    <Card interactive={false} surface="glass">
       <header className="mb-3 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-text-primary">Session history</h2>
         <p className="text-xs text-text-secondary">Track chats, revisit summaries, and delete assets.</p>
@@ -115,7 +115,7 @@ export function SessionHistory({
                     "rounded-2xl border px-4 py-3 text-sm transition-all",
                     isActive
                       ? "border-accent-primary/70 bg-accent-primary/10 text-text-accent shadow-glass"
-                      : "border-border-glass/70 bg-surface-glass/50 text-text-secondary hover:border-accent-primary/40 hover:text-text-primary",
+                      : "border-border-glass/75 bg-surface-glass/70 text-text-secondary hover:border-accent-primary/45 hover:text-text-primary",
                   )}
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -126,19 +126,19 @@ export function SessionHistory({
                         </span>
                         <span className="sr-only">{accessibleName}</span>
                       </p>
-                      <p className="text-xs text-text-secondary/80">Registered {formatTimestamp(clip.created_at)}</p>
+                      <p className="text-xs text-text-secondary/85">Registered {formatTimestamp(clip.created_at)}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1 text-xs text-text-secondary">
-                      <span className="rounded-full border border-border-glass px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
+                      <span className="rounded-full border border-border-glass/80 px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
                         {clip.status}
                       </span>
                       {clip.last_analysis_at ? (
-                        <p className="text-text-secondary/80">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
+                        <p className="text-text-secondary/85">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
                       ) : (
-                        <p className="text-text-secondary/60">Awaiting analysis</p>
+                        <p className="text-text-secondary/70">Awaiting analysis</p>
                       )}
                       {typeof clip.latency_ms === "number" ? (
-                        <p className="text-text-secondary/80">Latency {clip.latency_ms} ms</p>
+                        <p className="text-text-secondary/85">Latency {clip.latency_ms} ms</p>
                       ) : null}
                       <button
                         type="button"
@@ -175,7 +175,7 @@ export function SessionHistory({
                 "rounded-2xl border px-4 py-3 text-sm transition-all",
                 isActive
                   ? "border-accent-primary/70 bg-accent-primary/10 text-text-accent shadow-glass"
-                  : "border-border-glass/70 bg-surface-glass/50 text-text-secondary hover:border-accent-primary/40 hover:text-text-primary",
+                  : "border-border-glass/75 bg-surface-glass/70 text-text-secondary hover:border-accent-primary/45 hover:text-text-primary",
               )}
             >
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -189,7 +189,7 @@ export function SessionHistory({
                     </span>
                     <span className="sr-only">{accessibleName}</span>
                   </p>
-                  <p className="text-xs text-text-secondary/80">Updated {lastUpdated}</p>
+                  <p className="text-xs text-text-secondary/85">Updated {lastUpdated}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <button
@@ -236,7 +236,7 @@ export function SessionHistory({
                     }))
                   }
                   placeholder="Clarify a moment, request timestamps, etc."
-                  className="resize-none rounded-2xl border border-border-glass bg-surface-glass/60 px-3 py-2 text-xs text-text-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/40"
+                  className="resize-none rounded-2xl border border-border-glass/75 bg-surface-glass/70 px-3 py-2 text-xs text-text-primary focus:border-accent-primary focus:outline-none focus:ring-2 focus:ring-accent-primary/40"
                   disabled={session.isChatting}
                 />
                 <div className="flex items-center justify-between">
@@ -261,7 +261,7 @@ export function SessionHistory({
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Conversation</p>
                   <ul className="space-y-2">
                     {session.chats.map((entry) => (
-                      <li key={entry.id} className="rounded-2xl border border-border-glass bg-surface-glass/60 p-3 text-xs text-text-secondary">
+                      <li key={entry.id} className="rounded-2xl border border-border-glass/75 bg-surface-glass/70 p-3 text-xs text-text-secondary">
                         <p className="font-semibold text-text-primary">You</p>
                         <p className="mt-1 whitespace-pre-wrap text-text-secondary">{entry.prompt}</p>
                         <p className="mt-3 font-semibold text-text-primary">Hafnia</p>
@@ -274,7 +274,7 @@ export function SessionHistory({
                   </ul>
                 </div>
               ) : (
-                <div className="mt-3 rounded-2xl border border-border-glass bg-surface-glass/60 p-3">
+                <div className="mt-3 rounded-2xl border border-border-glass/75 bg-surface-glass/70 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">Suggested follow-ups</p>
                   <ul className="mt-2 space-y-1 text-xs text-text-secondary">
                     {FOLLOW_UP_SUGGESTIONS.map((suggestion) => (
