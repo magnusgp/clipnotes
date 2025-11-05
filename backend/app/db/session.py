@@ -40,7 +40,6 @@ def get_engine(database_url: str | None = None) -> AsyncEngine:
         "echo": False,
         "pool_pre_ping": True,
         "future": True,
-        "ssl": True
     }
 
     if database_url.startswith("sqlite+"):

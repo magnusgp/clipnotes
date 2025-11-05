@@ -41,9 +41,7 @@ async def test_request_counter_tracks_api_requests(tmp_path) -> None:
         response = await client.get("/api/ping")
         assert response.status_code == 200
 
-    engine = create_async_engine(database_url, echo=False, connect_args={
-        "ssl": True
-    })
+    engine = create_async_engine(database_url, echo=False)
     sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(engine, expire_on_commit=False)
 
     today = datetime.now(timezone.utc).date()
