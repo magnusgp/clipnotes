@@ -47,7 +47,7 @@ const VARIANT_STYLES: Record<ToastVariant, string> = {
   info: "border-sky-400/70 bg-sky-950/90 text-sky-100",
 };
 
-export function ToastProvider({ children }: { children: ReactNode }): JSX.Element {
+export function ToastProvider({ children }: { children: ReactNode }): ReactNode {
   const [toasts, setToasts] = useState<ToastRecord[]>([]);
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
 

@@ -41,8 +41,8 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
   if (!moments.length) {
     return (
       <section className="space-y-2" aria-live="polite">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Timeline</h3>
-        <p className="text-sm text-slate-400">No timeline data available for this clip yet.</p>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Timeline</h3>
+        <p className="text-sm text-text-secondary/80">No timeline data available for this clip yet.</p>
       </section>
     );
   }
@@ -50,15 +50,15 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
   return (
     <section className="space-y-4" aria-label={`Analysis timeline for ${accessibleClipLabel}`}>
       <header className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Timeline</h2>
-        <span className="text-xs text-slate-500">{accessibleClipLabel}</span>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">Timeline</h2>
+        <span className="text-xs text-text-secondary/75">{accessibleClipLabel}</span>
       </header>
       <figure className="space-y-3">
         <div
           role="img"
           aria-label={`Timeline overview for ${accessibleClipLabel}`}
           aria-describedby={descriptionId}
-          className="relative h-6 w-full overflow-hidden rounded-full border border-slate-800 bg-slate-900/80"
+          className="relative h-6 w-full overflow-hidden rounded-full border border-border-glass/80 bg-surface-glass/70 dark:border-slate-800 dark:bg-slate-900/80"
         >
           {moments.map((moment, index) => {
             const startPercent = Math.max(moment.start_s, 0) / safeDuration * 100;
@@ -72,7 +72,7 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
                 data-testid="timeline-segment"
                 data-severity={severity}
                 className={clsx(
-                  "absolute top-0 bottom-0 rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-100",
+                  "absolute top-0 bottom-0 rounded-full border transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-primary",
                   SEVERITY_STYLES[severity],
                 )}
                 style={{ left: `${startPercent}%`, width: `${widthPercent}%` }}
@@ -90,8 +90,8 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
           ))}
         </ul>
         <figcaption>
-          <p className="text-xs font-medium text-slate-300">Legend</p>
-          <ul className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+          <p className="text-xs font-medium text-text-secondary/80">Legend</p>
+          <ul className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-secondary/70">
             {SEVERITIES.map((severity) => (
               <li key={severity} className="flex items-center gap-2">
                 <span

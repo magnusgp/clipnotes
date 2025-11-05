@@ -1,125 +1,105 @@
-# ClipNotes
+# ClipNotes ![CI](https://github.com/magnusgp/clipnotes/actions/workflows/ci.yml/badge.svg)
 
-ClipNotes is a hackathon-ready web experience that turns short CCTV or dashcam clips into quick, readable summaries
-powered by the Hafnia VLM API. The stack pairs a FastAPI backend (Python 3.11, managed via `uv`) with a Vite + React
-frontend styled using Tailwind CSS and shadcn/ui components.
+> Summaries you can trust, in seconds. ClipNotes turns raw CCTV or dashcam footage into brief, actionable recaps for training, safety, and incident reviews.
 
-## Prerequisites
+## Why ClipNotes
 
-- Python 3.11
-- [`uv`](https://docs.astral.sh/uv/) package manager
-- Node.js 20 LTS with npm or pnpm
-- Hafnia API credentials (`HAFNIA_API_KEY`, `HAFNIA_BASE_URL`)
-- Optional: set `HAFNIA_USE_FAKE=true` when you need the stubbed Hafnia responses (default is the real API).
+- **Lightning-fast summaries** – Upload a clip and receive a structured brief with key moments, latency data, and remediation tips.
+- **Live operator console** – Monitor active analyses, revisit previous sessions, and triage follow-up questions without leaving the dashboard.
+- **SaaS-ready controls** – Tweak Hafnia model parameters, feature flags, and theme preferences in a dedicated settings workspace.
+- **Usage & health metrics** – Track request cadence, clip throughput, and latency warnings from a real-time metrics view.
 
-## Getting Started
+The platform combines a FastAPI backend (Python 3.11 via `uv`) with a Vite + React frontend styled using Tailwind CSS, shadcn/ui, and Framer Motion.
 
-```bash
-# Install backend dependencies
-uv lock
+## Quick Start
 
-# Launch FastAPI locally
-uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+1. **Install prerequisites**
+   - Python 3.11 with [`uv`](https://docs.astral.sh/uv/)
+   - Node.js 20 LTS with [`pnpm`](https://pnpm.io/) (npm works too)
+   - Hafnia API credentials (`HAFNIA_API_KEY`, `HAFNIA_BASE_URL`)
 
-# In another terminal, install frontend deps and start Vite
-cd frontend
-npm install
-npm run dev
-```
+2. **Configure environment**
 
-Vite proxies `/api` requests to `http://localhost:8000`, so the frontend can call the backend without additional CORS
-configuration. The backend reads `DATABASE_URL` (defaults to `sqlite+aiosqlite:///./clipnotes.db`) along with Hafnia
-credentials from `.env`.
+   ```bash
+   cp .env.example .env
+   # Add Hafnia credentials and optional defaults (ENABLE_LIVE_MODE, ENABLE_GRAPH_VIEW, CLIPNOTES_THEME_DEFAULT)
+   ```
 
-## Linting & Tests
+3. **Launch the backend**
 
-- Backend lint: `uv run ruff check backend`
-- Backend tests: `uv run pytest`
-- Backend targeted suites: `uv run pytest -k "clips_api"` (clip registry) and `uv run pytest -k "analysis_api"` (Hafnia analysis)
-- Frontend lint: `npm run lint`
-- Frontend tests: `npm run test`
-- Frontend monitoring specs: `npm run test -- tests/monitoring.clips.spec.tsx`
-- Compare & Reason backend: `uv run pytest backend/tests/integration/test_reasoning_api.py`
-- Compare & Reason frontend: `pnpm --prefix frontend test --run --filter reasoning`
+   ```bash
+   uv sync
+   uv run alembic upgrade head
+   uv run uvicorn backend.main:app --reload
+   ```
 
-## Monitoring Wave 1 Overview
+4. **Launch the frontend**
 
-- REST endpoints:
-	- `POST /api/clips` registers a clip filename and returns the clip ID and status metadata.
-	- `GET /api/clips?limit=25` lists recent clips with `latency_ms` and `last_analysis_at` for the monitoring sidebar.
-	- `POST /api/analysis/{clip_id}` triggers Hafnia by calling `/chat/completions` with the clip's asset identifier, returning the structured summary, timeline moments, and latency stamp.
-	- `GET /api/analysis/{clip_id}` fetches the latest analysis payload for replays or refresh states.
-	- `POST /api/chat` (follow-up assistant) logs threaded questions against an existing submission.
-- Frontend flows:
-	- **Upload & Analyze**: `UploadForm` posts to `/api/clips`, then calls `/api/analysis/{clip_id}` and streams status updates through `StatusBanner` and `SummaryPanel`.
-	- **Timeline review**: `Timeline` renders Hafnia `moments` with severity color-coding, sr-only descriptions, and tooltips for quick scanning.
-	- **Session history**: `SessionHistory` hydrates from `GET /api/clips`, supports clip re-selection, follow-up prompts, and asset deletion with optimistic UI state.
-	- **Accessibility**: The monitoring canvas passes axe checks via `npm run test -- --run tests/accessibility.monitoring.spec.tsx`, and all interactive controls have keyboard focus styles.
-	- **Asset IDs**: Monitoring assumes each clip maps to an existing Hafnia asset; by default we reuse the clip UUID as the asset identifier when requesting `/chat/completions`.
+   ```bash
+   cd frontend
+   pnpm install
+   pnpm dev -- --host
+   ```
 
-## Environment Variables
+Visit `http://localhost:5173` to access the monitoring console. Vite proxies API calls to `http://localhost:8000`, so no extra CORS setup is required.
 
-Copy `.env.example` to `.env` and populate the Hafnia credentials (do **not** commit real secrets):
+## Feature Tour
 
-```bash
-cp .env.example .env
-```
+### Monitoring Workspace
 
-`HAFNIA_USE_FAKE` defaults to `false`, so uv and Docker runs will call the live Hafnia API. Flip it to `true` only when you need offline demos or tests.
+- Drag-and-drop upload for short clips
+- Real-time status banner with latency tracking
+- Summary panel with structured Hafnia output
+- Session history to revisit or delete processed clips
+- Follow-up assistant for additional questions about any clip
 
-## Project Structure
+### SaaS Settings
 
-```text
-backend/
-	app/
-		api/
-		core/
-		services/
-		models/
-	tests/
+- `GET/PUT /api/config` exposes persisted model parameters, theme overrides, and feature flags
+- Accessible tab interface lets operators adjust FPS, temperature, default prompts, and live/demo flags
+- `/api/keys/hafnia` securely stores the hashed Hafnia key while surfacing configuration status
+- Theme toggle and provider respect user preference, system defaults, and reduced-motion settings
 
-frontend/
-	src/
-		components/
-		hooks/
-		pages/
-		styles/
-	tests/
+### Metrics Dashboard
 
-specs/001-video-summary/
-	plan.md
-	tasks.md
-	research.md
-	data-model.md
-	contracts/
+- `/api/metrics?window=12h|24h|7d` returns total clips, analyses, request counts, latency averages, and error rates
+- Request counter middleware records API usage per day without touching OPTIONS or non-API traffic
+- Animated tiles showcase today’s usage, lifetime totals, and latency warnings
+- Sparkline visualises hourly activity while the table summarises daily aggregates
+- Feature flag gating (`ENABLE_GRAPH_VIEW`) allows environments to hide the dashboard when needed
 
-specs/002-clip-monitoring/
-	plan.md
-	tasks.md
-	research.md
-	data-model.md
-	contracts/
-	quickstart.md
+## Deployment Notes
 
-docs/
-	performance/
-		clipnotes.md
-```
+- Default database lives at `sqlite+aiosqlite:///./clipnotes.db`. Override `DATABASE_URL` for production.
+- Set `HAFNIA_USE_FAKE=true` to run against the built-in stub during demos or automated tests.
+- Metrics counters rely on wall-clock UTC; ensure the hosting environment maintains accurate time.
 
-## Performance & Accessibility
+## Tooling & Verification
 
-- Backend logs will capture Hafnia round-trip latency to confirm the ≤10s turnaround requirement.
-- Frontend components are built with shadcn/ui primitives and audited with keyboard navigation + axe scans (see
-	`specs/001-video-summary/quickstart.md`).
+| Stage | Command |
+|-------|---------|
+| Backend lint | `uv run ruff check backend` |
+| Backend tests | `uv run pytest` |
+| Frontend lint | `pnpm --prefix frontend lint` |
+| Frontend tests | `pnpm --prefix frontend test:ci` |
+| Build artefacts | `pnpm --prefix frontend build` |
 
-## Release Checklist
+GitHub Actions (`.github/workflows/ci.yml`) executes the same sequence on every push, keeping the badge above in sync.
 
-Run these commands before tagging a release or sharing a demo build:
+## Tech Stack
 
-```bash
-uv run ruff check .
-uv run pytest
-npm --prefix frontend run lint
-npm --prefix frontend run test -- run tests/analyze.spec.tsx
-# Optional: docker compose build && docker compose up
-```
+- **Backend**: FastAPI, SQLAlchemy 2.x, HTTPX, Alembic, Pydantic
+- **Frontend**: React 18, React Router, React Query, Tailwind CSS, shadcn/ui, Framer Motion, Vitest, Testing Library
+- **Tooling**: `uv` for Python dependency management, `pnpm` for workspace installs, GitHub Actions for CI
+
+## Contributing
+
+We welcome improvements that enhance monitoring fidelity, SaaS controls, or user experience. Before opening a pull request:
+
+1. Run the verification commands listed above.
+2. Include screenshots or clips when altering UI flows.
+3. Update relevant docs in `specs/004-design-saas-polish/` or `docs/` when behaviour changes.
+
+---
+
+Need help or curious about the Hafnia integration? Review the OpenAPI contract in `contracts/api.yaml` or reach out via issues. ClipNotes aims to make safety reviews faster—let us know how it can help you.

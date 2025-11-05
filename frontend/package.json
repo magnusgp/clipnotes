@@ -8,8 +8,9 @@
     "build": "vite build",
     "preview": "vite preview --host",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "vitest",
-    "test:axe": "vitest run --reporter verbose --config vitest.config.ts"
+  "test": "vitest",
+  "test:ci": "vitest run --runInBand --reporter=verbose",
+  "test:axe": "vitest run --reporter verbose --config vitest.config.ts"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",

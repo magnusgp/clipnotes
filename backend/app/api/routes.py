@@ -10,6 +10,7 @@ from backend.app.api.deps import (
     get_hafnia_client,
     get_hafnia_upload_client,
     get_key_store,
+    get_metrics_service,
     get_session_registry,
     get_store,
     get_summarizer,
@@ -21,6 +22,7 @@ from backend.app.models.config import (
     HafniaKeyRequest,
     KeyStatusResponse,
 )
+from backend.app.models.metrics import MetricsResponse
 from backend.app.models.schemas import (
     AnalysisRequest,
     AnalysisResponse,
@@ -41,6 +43,7 @@ from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import HafniaAnalysisClientProtocol, HafniaClientError
 from backend.app.services.hafnia_client import HafniaClientProtocol
 from backend.app.services.key_store import KeyStore
+from backend.app.services.metrics_service import MetricsService
 from backend.app.services.sessions import SessionNotFoundError, SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.services.validators import UploadValidationError, validate_upload_file
@@ -98,6 +101,27 @@ async def get_flags(
     config_service: ConfigService = Depends(get_config_service),
 ) -> FlagsResponse:
     return await config_service.get_flags()
+
+
+@router.get(
+    "/metrics",
+    response_model=MetricsResponse,
+    responses={400: {"model": ErrorResponse}},
+    tags=["metrics"],
+)
+async def get_metrics(
+    window: str | None = None,
+    metrics_service: MetricsService = Depends(get_metrics_service),
+) -> MetricsResponse | JSONResponse:
+    try:
+        return await metrics_service.get_metrics(window=window)
+    except ValueError as exc:
+        return _error_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_window",
+            message="Window parameter is invalid.",
+            detail=str(exc),
+        )
 
 
 @router.get(

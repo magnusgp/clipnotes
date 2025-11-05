@@ -21,3 +21,4 @@
 - **Decision**: Add GitHub Actions workflow running lint, pytest, and production build, publishing a status badge in README.
   - **Rationale**: Aligns with constitution and demonstrates production readiness; GitHub Actions integrates seamlessly with repo.
   - **Alternatives considered**: (1) Manual scripts only — fails acceptance criteria. (2) CircleCI — unnecessary migration effort.
+  - **Outcome**: Implemented `.github/workflows/ci.yml` covering `uv run ruff check backend`, `uv run pytest`, `pnpm lint`, `pnpm test:ci`, and `pnpm build`; badge added to README for quick status checks.

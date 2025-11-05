@@ -5,7 +5,7 @@ import App from "../src/pages/App";
 import { withProviders } from "./test-utils/providers";
 
 function renderApp() {
-  const { element } = withProviders(<App />);
+  const { element } = withProviders(<App loadFlags={false} />, { withFeatureFlags: false });
   return render(element);
 }
 
@@ -104,7 +104,7 @@ describe("Clip analysis flow", () => {
       throw new Error(`Unexpected fetch call to ${url} (${method})`);
     });
 
-  renderApp();
+    renderApp();
 
     const fileInput = screen.getByLabelText(/video file/i) as HTMLInputElement;
     fireEvent.change(fileInput, {

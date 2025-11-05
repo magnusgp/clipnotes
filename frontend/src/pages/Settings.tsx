@@ -133,14 +133,14 @@ export default function Settings() {
     <section className="space-y-10">
       <header className="space-y-3">
         <p className="text-xs uppercase tracking-[0.26em] text-emerald-400">Operator settings</p>
-        <h1 className="text-3xl font-semibold text-slate-100">Configure SaaS controls</h1>
-        <p className="text-sm text-slate-300">
+        <h1 className="text-3xl font-semibold text-text-primary">Configure SaaS controls</h1>
+        <p className="text-sm text-text-secondary">
           Adjust Hafnia defaults, toggle feature access, and manage credentials for the premium monitoring shell.
         </p>
       </header>
 
       <div className="flex flex-col gap-6 lg:flex-row">
-        <Card interactive={false} padded={false} className="w-full lg:min-w-[240px] lg:max-w-[280px]">
+  <Card interactive={false} padded={false} surface="glass" className="w-full lg:min-w-[240px] lg:max-w-[280px]">
           <nav
             className="flex flex-row flex-wrap gap-2 p-4 lg:flex-col"
             role="tablist"
@@ -155,10 +155,10 @@ export default function Settings() {
                   role="tab"
                   aria-selected={isActive}
                   aria-controls={`settings-panel-${tab.id}`}
-                  className={`flex w-full flex-col gap-1 rounded-xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-400/80 focus:ring-offset-2 focus:ring-offset-slate-950 ${
+                  className={`flex w-full flex-col gap-1 rounded-xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-400/80 focus:ring-offset-2 focus:ring-offset-surface-glass ${
                     isActive
                       ? "border-emerald-400/60 bg-emerald-400/10 text-emerald-200 shadow-[0_0_0_1px_rgba(16,185,129,0.2)]"
-                      : "border-transparent bg-surface-canvas/50 text-text-secondary hover:bg-surface-canvas/70"
+                      : "border-transparent bg-surface-glass/60 text-text-secondary hover:bg-surface-glass/75"
                   }`}
                   onClick={() => setActiveTab(tab.id)}
                 >
@@ -170,7 +170,7 @@ export default function Settings() {
           </nav>
         </Card>
 
-        <Card id={`settings-panel-${activeTab}`} interactive={false} className="flex-1">
+  <Card id={`settings-panel-${activeTab}`} interactive={false} surface="glass" className="flex-1">
           <CardHeader className="space-y-3">
             <CardTitle className="text-2xl">
               {SETTINGS_TABS.find((tab) => tab.id === activeTab)?.label ?? "Settings"}

@@ -51,7 +51,7 @@ describe("settings page integration", () => {
     });
 
   const user = userEvent.setup();
-  const { element } = withProviders(<App />);
+  const { element } = withProviders(<App loadFlags={false} />, { withFeatureFlags: false });
   render(element);
 
     const fpsInput = await screen.findByLabelText(/frames per second/i);

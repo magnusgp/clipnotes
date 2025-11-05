@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: ClipNotes API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     REST contract for clip registration, Hafnia-triggered analysis, monitoring data, and reasoning endpoints
     used by the ClipNotes application.
@@ -60,6 +60,107 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClipListResponse'
+  /api/config:
+    get:
+      summary: Retrieve operator configuration and flags
+      tags: [config]
+      responses:
+        '200':
+          description: Current configuration values
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+    put:
+      summary: Update operator-configurable parameters
+      tags: [config]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigUpdateRequest'
+      responses:
+        '200':
+          description: Updated configuration summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/config/flags:
+    get:
+      summary: Retrieve feature flag status only
+      tags: [config]
+      responses:
+        '200':
+          description: Flag payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlagsResponse'
+  /api/keys/hafnia:
+    get:
+      summary: Check whether a Hafnia API key is configured
+      tags: [config]
+      responses:
+        '200':
+          description: Key status indicator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyStatusResponse'
+    post:
+      summary: Store or rotate a Hafnia API key for demo use
+      tags: [config]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HafniaKeyRequest'
+      responses:
+        '200':
+          description: Key accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyStatusResponse'
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/metrics:
+    get:
+      summary: Retrieve usage and latency metrics for dashboard
+      tags: [metrics]
+      parameters:
+        - in: query
+          name: window
+          description: Optional lookback window for latency calculations
+          schema:
+            type: string
+            enum: ["12h", "24h", "7d"]
+      responses:
+        '200':
+          description: Metrics snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+        '400':
+          description: Invalid window value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /api/clips/{clip_id}:
     get:
       summary: Retrieve clip details
@@ -398,6 +499,146 @@ components:
           type: number
           minimum: 0
           maximum: 1
+    ConfigResponse:
+      type: object
+      required: [model, flags]
+      properties:
+        model:
+          $ref: '#/components/schemas/ModelParams'
+        flags:
+          $ref: '#/components/schemas/Flags'
+        theme:
+          type: object
+          additionalProperties: true
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+        updated_by:
+          type: string
+          nullable: true
+    ConfigUpdateRequest:
+      type: object
+      properties:
+        model:
+          $ref: '#/components/schemas/ModelParams'
+        flags:
+          $ref: '#/components/schemas/Flags'
+        theme:
+          type: object
+          additionalProperties: true
+          nullable: true
+      additionalProperties: false
+    ModelParams:
+      type: object
+      required: [fps, temperature]
+      properties:
+        fps:
+          type: integer
+          minimum: 1
+          maximum: 120
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+        max_tokens:
+          type: integer
+          minimum: 64
+          maximum: 8192
+          nullable: true
+        default_prompt:
+          type: string
+          maxLength: 500
+          nullable: true
+    Flags:
+      type: object
+      properties:
+        ENABLE_LIVE_MODE:
+          type: boolean
+        ENABLE_GRAPH_VIEW:
+          type: boolean
+      additionalProperties:
+        type: boolean
+    FlagsResponse:
+      type: object
+      required: [flags]
+      properties:
+        flags:
+          $ref: '#/components/schemas/Flags'
+    KeyStatusResponse:
+      type: object
+      required: [configured]
+      properties:
+        configured:
+          type: boolean
+        last_updated:
+          type: string
+          format: date-time
+          nullable: true
+    HafniaKeyRequest:
+      type: object
+      required: [key]
+      properties:
+        key:
+          type: string
+          minLength: 10
+          maxLength: 128
+    MetricsResponse:
+      type: object
+      required: [generated_at, total_clips, total_analyses, avg_latency_ms, requests_today, clips_today, per_hour, per_day, latency_flag]
+      properties:
+        generated_at:
+          type: string
+          format: date-time
+        total_clips:
+          type: integer
+          minimum: 0
+        total_analyses:
+          type: integer
+          minimum: 0
+        avg_latency_ms:
+          type: number
+          minimum: 0
+        requests_today:
+          type: integer
+          minimum: 0
+        clips_today:
+          type: integer
+          minimum: 0
+        per_hour:
+          type: array
+          items:
+            type: object
+            required: [hour, requests]
+            properties:
+              hour:
+                type: string
+                format: date-time
+              requests:
+                type: integer
+                minimum: 0
+        per_day:
+          type: array
+          items:
+            type: object
+            required: [date, requests, analyses]
+            properties:
+              date:
+                type: string
+                format: date
+              requests:
+                type: integer
+                minimum: 0
+              analyses:
+                type: integer
+                minimum: 0
+        latency_flag:
+          type: boolean
+        error_rate:
+          type: number
+          minimum: 0
+          maximum: 1
+          nullable: true
     ReasoningChatRequest:
       type: object
       required: [clips, message]

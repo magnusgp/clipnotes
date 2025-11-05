@@ -5,23 +5,16 @@ import SessionHistory from "../components/SessionHistory";
 import StatusBanner from "../components/StatusBanner";
 import SummaryPanel from "../components/SummaryPanel";
 import UploadForm from "../components/UploadForm";
+import ReasoningMetricsPanel from "../components/reasoning/ReasoningMetricsPanel";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { Hero } from "../components/Hero";
+import { FeatureFlagProvider, isFeatureEnabled, useFeatureFlags } from "../flags";
+import type { FeatureFlagMap } from "../types/config";
 import CompareReason from "./CompareReason";
 import Settings from "./Settings";
+import Metrics from "./Metrics";
 import { useAnalyze } from "../hooks/useAnalyze";
 import { useClips } from "../hooks/useClips";
-
-type NavigationItem = {
-  id: string;
-  label: string;
-  path: string;
-};
-
-const NAV_ITEMS: NavigationItem[] = [
-  { id: "monitoring", label: "Monitoring", path: "/" },
-  { id: "settings", label: "Settings", path: "/settings" },
-];
 
 function MonitoringDashboard() {
   const { clips, refresh: refreshClips, isLoading: isClipListLoading, error: clipListError } = useClips();
@@ -40,6 +33,9 @@ function MonitoringDashboard() {
     statusChangedAt,
     history,
   } = state;
+  const { flags } = useFeatureFlags();
+  const liveModeEnabled = isFeatureEnabled(flags, "ENABLE_LIVE_MODE", false);
+  const graphViewEnabled = isFeatureEnabled(flags, "ENABLE_GRAPH_VIEW", true);
 
   const handleAnalyze = useCallback(
     (file: File) => {
@@ -59,7 +55,7 @@ function MonitoringDashboard() {
     <>
       <Hero />
 
-      <section id="upload" className="grid gap-10 lg:grid-cols-[1.35fr,1fr]">
+      <section id="upload" className="grid gap-10 lg:grid-cols-[1.2fr,1fr]">
         <div className="space-y-8">
           <div className="space-y-6">
             <StatusBanner
@@ -92,15 +88,31 @@ function MonitoringDashboard() {
           />
         </div>
 
-        <div id="history">
-          <SessionHistory
-            clips={clips}
-            sessions={history}
-            activeSubmissionId={summary?.submission_id ?? analysis?.clip_id}
-            onSelect={handleSelectSession}
-            onSendChat={sendChat}
-            onDelete={deleteSession}
-          />
+        <div className="space-y-8" id="insights">
+          {graphViewEnabled ? (
+            <ReasoningMetricsPanel
+              clips={clips}
+              isRefreshing={isLoading || isClipListLoading}
+              onRefreshClips={refreshClips}
+              error={clipListError}
+            />
+          ) : null}
+
+          <div id="history">
+            <SessionHistory
+              clips={clips}
+              sessions={history}
+              activeSubmissionId={summary?.submission_id ?? analysis?.clip_id}
+              onSelect={handleSelectSession}
+              onSendChat={sendChat}
+              onDelete={deleteSession}
+            />
+            {liveModeEnabled ? (
+              <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-300">
+                Live mode enabled — session history will stream in automatically.
+              </p>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -112,6 +124,13 @@ function MonitoringDashboard() {
 }
 
 function AppLayout() {
+  const { flags } = useFeatureFlags();
+  const navItems = [
+    { id: "monitoring", label: "Monitoring", path: "/" },
+    ...(isFeatureEnabled(flags, "ENABLE_GRAPH_VIEW", true) ? [{ id: "metrics", label: "Metrics", path: "/metrics" }] : []),
+    { id: "settings", label: "Settings", path: "/settings" },
+  ];
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-surface-canvas text-text-primary">
       <div
@@ -125,13 +144,15 @@ function AppLayout() {
           </div>
           <div className="flex items-center gap-4">
             <nav className="flex items-center gap-2 text-sm font-semibold" aria-label="Primary">
-              {NAV_ITEMS.map((item) => (
+              {navItems.map((item) => (
                 <NavLink
                   key={item.id}
                   to={item.path}
                   className={({ isActive }) =>
-                    `rounded-md px-3 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-slate-950 ${
-                      isActive ? "bg-emerald-400/20 text-emerald-300" : "text-slate-300 hover:text-slate-100"
+                    `rounded-md px-3 py-1.5 transition focus:outline-none focus:ring-2 focus:ring-accent-primary/40 focus:ring-offset-2 focus:ring-offset-surface-canvas ${
+                      isActive
+                        ? "bg-accent-primary/15 text-accent-primary"
+                        : "text-text-secondary hover:text-text-primary"
                     }`
                   }
                   end={item.path === "/"}
@@ -150,17 +171,25 @@ function AppLayout() {
   );
 }
 
-function App() {
+interface AppProps {
+  initialFlags?: FeatureFlagMap;
+  loadFlags?: boolean;
+}
+
+function App({ initialFlags, loadFlags = true }: AppProps = {}) {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<AppLayout />}>
-          <Route index element={<MonitoringDashboard />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <FeatureFlagProvider loadFromServer={loadFlags} initialFlags={initialFlags}>
+      <BrowserRouter>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route index element={<MonitoringDashboard />} />
+            <Route path="metrics" element={<Metrics />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </FeatureFlagProvider>
   );
 }
 

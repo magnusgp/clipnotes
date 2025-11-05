@@ -44,6 +44,7 @@ export interface ReasoningComparisonResponse {
   evidence: ReasoningEvidence[];
   metrics?: ReasoningMetricsCore | null;
   confidence?: number | null;
+  structured?: Record<string, unknown> | null;
 }
 
 export interface ReasoningComparePayload {

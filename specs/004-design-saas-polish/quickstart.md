@@ -19,6 +19,7 @@
    uv run pytest backend/tests/unit/test_config_api.py
    uv run pytest backend/tests/unit/test_metrics_service.py
    uv run pytest backend/tests/integration/test_config_and_metrics.py
+   uv run pytest backend/tests/integration/test_metrics_endpoint.py
    ```
 
 ## Frontend
@@ -35,6 +36,7 @@
    ```bash
    pnpm test --run --filter ui-theming
    pnpm test --run --filter saas-settings
+   pnpm test --run --filter metrics-dashboard
    pnpm lint
    pnpm build
    ```
@@ -55,3 +57,4 @@ Update `.env.example` to reflect new variables and rotation notes.
 2. Use the Settings page to rotate the Hafnia key and adjust FPS/temperature; trigger a new analysis and verify logs reflect new parameters.
 3. Visit the Metrics page; confirm stats update within 15 seconds and warnings appear when thresholds exceeded (simulate by raising latency).
 4. Confirm GitHub Actions workflow badge is green after pushing branch (lint + pytest + build).
+5. Verify CI completes without retries: `uv run pytest`, `pnpm lint`, `pnpm test:ci`, `pnpm build`.

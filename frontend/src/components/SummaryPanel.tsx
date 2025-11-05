@@ -168,7 +168,7 @@ export function SummaryPanel({
       : "Analyzing video… this can take a few seconds.";
 
   return (
-    <Card interactive={false} className="p-6">
+  <Card interactive={false} surface="glass">
       <header className="mb-4 flex items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-lg font-semibold text-text-primary">Summary</h2>
