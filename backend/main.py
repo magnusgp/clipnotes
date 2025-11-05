@@ -27,6 +27,15 @@ def create_app() -> FastAPI:
 
     frontend_origin = str(settings.frontend_url).rstrip("/")
     origins: set[str] = {frontend_origin, f"{frontend_origin}/"}
+    
+    application.add_middleware(
+        RequestCounterMiddleware,
+        database_url=settings.database_url,
+    )
+
+    application.include_router(system_router)
+    application.include_router(api_router)
+    
     application.add_middleware(
     CORSMiddleware,
         allow_origins=[
@@ -38,15 +47,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["*"],
         max_age=86400,
-)
-
-    application.add_middleware(
-        RequestCounterMiddleware,
-        database_url=settings.database_url,
     )
-
-    application.include_router(system_router)
-    application.include_router(api_router)
     return application
 
 
