@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import replace
 from typing import Any, Protocol, Sequence, cast
 from uuid import UUID
@@ -25,6 +26,9 @@ class HafniaAnalysisClientProtocol(Protocol):
         prompt: str | None = None,
     ) -> AnalysisPayload:
         """Trigger Hafnia analysis for a clip and normalize the payload."""
+
+
+_TRAILING_COMMA_PATTERN = re.compile(r",(?=\s*[}\]])")
 
 
 class HafniaAnalysisClient:
@@ -290,12 +294,18 @@ class HafniaAnalysisClient:
         if not text:
             return None
 
-        try:
-            candidate = json.loads(text)
+        candidate_texts = [text]
+        cleaned = HafniaAnalysisClient._strip_trailing_commas(text)
+        if cleaned != text:
+            candidate_texts.append(cleaned)
+
+        for candidate_text in candidate_texts:
+            try:
+                candidate = json.loads(candidate_text)
+            except json.JSONDecodeError:
+                continue
             if isinstance(candidate, dict):
                 return candidate
-        except json.JSONDecodeError:
-            pass
 
         start = text.find("{")
         end = text.rfind("}")
@@ -303,14 +313,28 @@ class HafniaAnalysisClient:
             return None
 
         snippet = text[start : end + 1]
-        try:
-            candidate = json.loads(snippet)
-        except json.JSONDecodeError:
-            return None
+        candidate_texts = [snippet]
+        cleaned_snippet = HafniaAnalysisClient._strip_trailing_commas(snippet)
+        if cleaned_snippet != snippet:
+            candidate_texts.append(cleaned_snippet)
 
-        if isinstance(candidate, dict):
-            return candidate
+        for candidate_text in candidate_texts:
+            try:
+                candidate = json.loads(candidate_text)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(candidate, dict):
+                return candidate
         return None
+
+    @staticmethod
+    def _strip_trailing_commas(value: str) -> str:
+        cleaned = value
+        while True:
+            updated = _TRAILING_COMMA_PATTERN.sub("", cleaned)
+            if updated == cleaned:
+                return cleaned
+            cleaned = updated
 
 
 class FakeHafniaClient:

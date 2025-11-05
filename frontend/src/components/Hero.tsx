@@ -5,6 +5,7 @@ import { useTheme } from "../theme/ThemeProvider";
 import { fadeInUp, heroCardMotion, heroHeadlineMotion, staggerContainer } from "../utils/motion";
 import { cn } from "../utils/cn";
 import { Card } from "./Card";
+import { useMetrics } from "../hooks/useMetrics";
 
 interface HeroProps {
   className?: string;
@@ -13,6 +14,11 @@ interface HeroProps {
 export function Hero({ className }: HeroProps) {
   const { prefersReducedMotion } = useTheme();
   const shouldAnimate = !prefersReducedMotion;
+  const { data: metrics } = useMetrics({ pollInterval: 30000 });
+  const metricsData = metrics ?? null;
+  const averageLatencyLabel = metricsData && Number.isFinite(metricsData.avg_latency_ms)
+    ? `${(metricsData.avg_latency_ms / 1000).toFixed(1)}s`
+    : null;
 
   return (
     <section
@@ -67,20 +73,22 @@ export function Hero({ className }: HeroProps) {
             </a>
           </motion.div>
 
-          <motion.dl variants={fadeInUp} className="grid gap-6 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-text-secondary/80">Latest latency</dt>
-              <dd className="mt-1 text-2xl font-semibold text-text-accent">&lt; 5s</dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary/80">Clips analysed today</dt>
-              <dd className="mt-1 text-2xl font-semibold text-text-accent">18</dd>
-            </div>
-            <div>
-              <dt className="text-text-secondary/80">Theme preference</dt>
-              <dd className="mt-1 text-2xl font-semibold text-text-accent">Instant</dd>
-            </div>
-          </motion.dl>
+          {metricsData ? (
+            <motion.dl variants={fadeInUp} className="grid gap-6 text-sm sm:grid-cols-3">
+              <div>
+                <dt className="text-text-secondary/80">Average latency</dt>
+                <dd className="mt-1 text-2xl font-semibold text-text-accent">{averageLatencyLabel ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-text-secondary/80">Clips analysed today</dt>
+                <dd className="mt-1 text-2xl font-semibold text-text-accent">{metricsData.clips_today.toLocaleString()}</dd>
+              </div>
+              <div>
+                <dt className="text-text-secondary/80">Requests today</dt>
+                <dd className="mt-1 text-2xl font-semibold text-text-accent">{metricsData.requests_today.toLocaleString()}</dd>
+              </div>
+            </motion.dl>
+          ) : null}
         </div>
 
         <motion.div
