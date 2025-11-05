@@ -68,7 +68,9 @@ async def test_metrics_snapshot_includes_recent_activity(tmp_path) -> None:
     await store.save_analysis(clip_one.id, payload_warn)
     await store.save_analysis(clip_two.id, payload_error)
 
-    engine = create_async_engine(database_url, echo=False)
+    engine = create_async_engine(database_url, echo=False, connect_args={
+        "ssl": True
+    })
     sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(engine, expire_on_commit=False)
 
     async with sessions() as session:

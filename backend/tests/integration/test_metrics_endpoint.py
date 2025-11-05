@@ -38,7 +38,9 @@ async def test_metrics_endpoint_returns_snapshot(tmp_path) -> None:
         ),
     )
 
-    engine = create_async_engine(database_url, echo=False)
+    engine = create_async_engine(database_url, echo=False, connect_args={
+        "ssl": True
+    })
     sessions: async_sessionmaker[AsyncSession] = async_sessionmaker(engine, expire_on_commit=False)
 
     async with sessions() as session:
