@@ -118,34 +118,38 @@ export function SessionHistory({
                       : "border-border-glass/75 bg-surface-glass/70 text-text-secondary hover:border-accent-primary/45 hover:text-text-primary",
                   )}
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-text-primary">
-                        <span aria-hidden="true" className="filename-ext" data-ext={extension}>
-                          {base}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-text-primary">
+                          <span aria-hidden="true" className="filename-ext" data-ext={extension}>
+                            {base}
+                          </span>
+                          <span className="sr-only">{accessibleName}</span>
+                        </p>
+                        <p className="text-xs text-text-secondary/80">Registered {formatTimestamp(clip.created_at)}</p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 text-xs text-text-secondary/80 text-right">
+                        <span className="rounded-full border border-border-glass/80 px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
+                          {clip.status}
                         </span>
-                        <span className="sr-only">{accessibleName}</span>
-                      </p>
-                      <p className="text-xs text-text-secondary/85">Registered {formatTimestamp(clip.created_at)}</p>
+                        {clip.last_analysis_at ? (
+                          <p className="text-text-secondary/75">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
+                        ) : (
+                          <p className="text-text-secondary/70">Awaiting analysis</p>
+                        )}
+                        {typeof clip.latency_ms === "number" ? (
+                          <p className="text-text-secondary/75">Latency {clip.latency_ms} ms</p>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1 text-xs text-text-secondary">
-                      <span className="rounded-full border border-border-glass/80 px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
-                        {clip.status}
-                      </span>
-                      {clip.last_analysis_at ? (
-                        <p className="text-text-secondary/85">Last analysis {formatTimestamp(clip.last_analysis_at)}</p>
-                      ) : (
-                        <p className="text-text-secondary/70">Awaiting analysis</p>
-                      )}
-                      {typeof clip.latency_ms === "number" ? (
-                        <p className="text-text-secondary/85">Latency {clip.latency_ms} ms</p>
-                      ) : null}
+                    <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={() => {
                           void onSelect(clip.clip_id);
                         }}
-                        className="mt-1 rounded-full border border-border-glass px-3 py-1 text-xs font-semibold text-text-primary transition hover:border-accent-primary hover:text-text-accent"
+                        className="rounded-full border border-border-glass px-3 py-1 text-xs font-semibold text-text-primary transition hover:border-accent-primary hover:text-text-accent"
                       >
                         View summary
                       </button>
@@ -178,20 +182,34 @@ export function SessionHistory({
                   : "border-border-glass/75 bg-surface-glass/70 text-text-secondary hover:border-accent-primary/45 hover:text-text-primary",
               )}
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p
-                    className="font-semibold text-text-primary"
-                    title={session.registeredFileName ?? session.fileName ?? undefined}
-                  >
-                    <span aria-hidden="true" className="filename-ext" data-ext={extension}>
-                      {base}
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p
+                      className="font-semibold text-text-primary"
+                      title={session.registeredFileName ?? session.fileName ?? undefined}
+                    >
+                      <span aria-hidden="true" className="filename-ext" data-ext={extension}>
+                        {base}
+                      </span>
+                      <span className="sr-only">{accessibleName}</span>
+                    </p>
+                    <p className="text-xs text-text-secondary/80">Updated {lastUpdated}</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1 text-xs text-text-secondary/80 text-right">
+                    <span className="rounded-full border border-border-glass/80 px-3 py-0.5 text-[0.7rem] font-semibold uppercase tracking-wide text-text-primary">
+                      {session.chats.length ? `${session.chats.length} chat${session.chats.length > 1 ? "s" : ""}` : "No chats yet"}
                     </span>
-                    <span className="sr-only">{accessibleName}</span>
-                  </p>
-                  <p className="text-xs text-text-secondary/85">Updated {lastUpdated}</p>
+                    {session.isChatting ? (
+                      <p className="text-text-secondary/75">Preparing response…</p>
+                    ) : session.chatError ? (
+                      <p className="text-rose-200">Follow-up failed</p>
+                    ) : (
+                      <p className="text-text-secondary/70">Ready for follow-ups</p>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-wrap items-center justify-end gap-2">
                   <button
                     type="button"
                     onClick={() => {

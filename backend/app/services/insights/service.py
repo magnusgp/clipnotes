@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from urllib.parse import urlsplit
 
 from backend.app.models.insights import InsightResponse, InsightShareResponse, InsightWindow
 from backend.app.services.insights.aggregator import InsightAggregator
@@ -129,6 +130,9 @@ class InsightService:
     def _build_share_url(self, token: str) -> str:
         if not self._share_base_url:
             raise RuntimeError("Share base URL is not configured")
-
-        base = self._share_base_url.rstrip("/")
-        return f"{base}/insights/share/{token}"
+        parsed = urlsplit(self._share_base_url)
+        if parsed.scheme and parsed.netloc:
+            origin = f"{parsed.scheme}://{parsed.netloc}"
+        else:
+            origin = self._share_base_url.rstrip("/")
+        return f"{origin}/share/{token}"

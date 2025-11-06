@@ -12,10 +12,18 @@ interface InsightsToolbarProps {
   generatedAt?: string | null;
   cacheExpiresAt?: string | null;
 }
-
-const WINDOW_OPTIONS: Array<{ value: InsightWindow; label: string; description: string }> = [
-  { value: "24h", label: "24 hours", description: "Hourly trend" },
-  { value: "7d", label: "7 days", description: "Daily trend" },
+const WINDOW_OPTIONS: Array<{ value: InsightWindow; label: string; description: string; disabled?: boolean }> = [
+  {
+    value: "24h",
+    label: "24 hours",
+    description: "Currently showing the last 24 hours while we polish the weekly view.",
+  },
+  {
+    value: "7d",
+    label: "7 days",
+    description: "Daily trend (coming soon)",
+    disabled: true,
+  },
 ];
 
 function formatTimestamp(value: string | null | undefined): string | null {
@@ -58,14 +66,20 @@ export function InsightsToolbar({
                   "rounded-full px-3 py-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/40",
                   option.value === window
                     ? "bg-accent-primary/20 text-accent-primary"
-                    : "text-text-secondary hover:text-text-primary",
+                    : option.disabled
+                        ? "text-text-secondary/50"
+                        : "text-text-secondary hover:text-text-primary",
                 )}
                 onClick={() => {
+                  if (option.disabled) {
+                    return;
+                  }
                   if (option.value !== window) {
                     onWindowChange(option.value);
                   }
                 }}
-                disabled={isLoading || isRegenerating}
+                disabled={isLoading || isRegenerating || option.disabled}
+                title={option.disabled ? "7-day insights are coming soon" : undefined}
               >
                 {option.label}
               </button>

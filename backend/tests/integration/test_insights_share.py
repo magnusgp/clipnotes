@@ -58,3 +58,18 @@ async def test_share_token_round_trip(tmp_path) -> None:
     finally:
         app.dependency_overrides.clear()
         await store.close()
+
+
+@pytest.mark.asyncio
+async def test_share_url_strips_path_component(tmp_path) -> None:
+    database_url = f"sqlite+aiosqlite:///{tmp_path/'insights_share_path.db'}"
+    service = InsightService(
+        database_url=database_url,
+        cache_ttl_seconds=30,
+        share_token_salt="test-share-salt",
+        share_base_url="https://clipnotes.example.com/insights",
+    )
+
+    url = service._build_share_url("abc123")
+
+    assert url == "https://clipnotes.example.com/share/abc123"
