@@ -22,22 +22,47 @@ function formatTimestamp(value: string | null | undefined): string | null {
   return date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
 }
 
-export function ShareBanner({ window, share, isCreating, onCreateShare }: ShareBannerProps) {
+export function ShareBanner({ window: insightWindow, share, isCreating, onCreateShare }: ShareBannerProps) {
   const toast = useToast();
+  const browserWindow =
+    typeof globalThis !== "undefined" && typeof (globalThis as { window?: Window }).window !== "undefined"
+      ? (globalThis as { window: Window }).window
+      : null;
 
   const generatedLabel = useMemo(() => formatTimestamp(share?.generated_at), [share?.generated_at]);
   const expiresLabel = useMemo(() => formatTimestamp(share?.cache_expires_at), [share?.cache_expires_at]);
+
+  const resolvedShareUrl = useMemo(() => {
+    if (!share?.url) {
+      return null;
+    }
+    if (!browserWindow) {
+      return share.url;
+    }
+    try {
+      const currentOrigin = browserWindow.location.origin;
+      const target = share.url.startsWith("http") ? new URL(share.url) : new URL(share.url, currentOrigin);
+      if (target.origin !== currentOrigin) {
+        target.protocol = browserWindow.location.protocol;
+        target.host = browserWindow.location.host;
+      }
+      return target.toString();
+    } catch {
+      return share.url;
+    }
+  }, [browserWindow, share?.url]);
 
   const handleCopy = useCallback(async () => {
     if (!share?.url) {
       return;
     }
+    const url = resolvedShareUrl ?? share.url;
     try {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(share.url);
+        await navigator.clipboard.writeText(url);
       } else {
         const tempInput = document.createElement("input");
-        tempInput.value = share.url;
+        tempInput.value = url;
         document.body.appendChild(tempInput);
         tempInput.select();
         document.execCommand("copy");
@@ -56,7 +81,7 @@ export function ShareBanner({ window, share, isCreating, onCreateShare }: ShareB
         variant: "error",
       });
     }
-  }, [share?.url, toast]);
+  }, [resolvedShareUrl, share?.url, toast]);
 
   return (
     <section className="rounded-2xl border border-border-glass/60 bg-surface-panel/60 p-4">
@@ -65,7 +90,7 @@ export function ShareBanner({ window, share, isCreating, onCreateShare }: ShareB
           <p className="text-xs uppercase tracking-[0.28em] text-text-secondary/70">Share timeline</p>
           <h2 className="text-lg font-semibold text-text-primary">Generate a read-only link</h2>
           <p className="text-sm text-text-secondary/80">
-            Share the {window === "7d" ? "seven day" : "twenty four hour"} insight snapshot with stakeholders without granting dashboard access.
+            Share the {insightWindow === "7d" ? "seven day" : "twenty four hour"} insight snapshot with stakeholders without granting dashboard access.
           </p>
           {share ? (
             <div className="flex flex-col gap-1 text-xs text-text-secondary/70">
@@ -78,8 +103,8 @@ export function ShareBanner({ window, share, isCreating, onCreateShare }: ShareB
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:min-w-[22rem]">
           {share ? (
             <div className="flex items-center gap-2 rounded-xl border border-border-glass/60 bg-surface-glass/50 px-3 py-2 text-sm">
-              <span className="truncate" title={share.url}>
-                {share.url}
+              <span className="truncate" title={resolvedShareUrl ?? share.url}>
+                {resolvedShareUrl ?? share.url}
               </span>
               <button
                 type="button"
@@ -95,7 +120,7 @@ export function ShareBanner({ window, share, isCreating, onCreateShare }: ShareB
           <button
             type="button"
             onClick={() => {
-              void onCreateShare(window);
+              void onCreateShare(insightWindow);
             }}
             className={cn(
               "inline-flex items-center justify-center rounded-full border border-border-glass/70 px-4 py-2 text-sm font-semibold transition",

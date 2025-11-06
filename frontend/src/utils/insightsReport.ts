@@ -37,19 +37,30 @@ function safeTopLabels(labels: InsightTopLabel[]): InsightTopLabel[] {
   return labels.slice(0, 5);
 }
 
+function describeSeverityCategory(value: number | null | undefined): string {
+  if (value === null || value === undefined) {
+    return "Mixed";
+  }
+  if (value >= 1.5) {
+    return "High";
+  }
+  if (value >= 0.5) {
+    return "Medium";
+  }
+  return "Low";
+}
+
 function renderTopLabels(labels: InsightTopLabel[]): string {
   if (!labels.length) {
     return '<p class="section-body muted">No top labels captured in this window.</p>';
   }
   const items = labels
     .map((label) => {
-      const avgSeverity = label.avg_severity !== null && label.avg_severity !== undefined
-        ? `${label.avg_severity.toFixed(1)}`
-        : "-";
+      const dominantSeverity = describeSeverityCategory(label.avg_severity);
       return `<tr>
         <td class="label-name">${escapeHtml(label.label)}</td>
         <td class="label-count">${label.count}</td>
-        <td class="label-severity">${avgSeverity}</td>
+        <td class="label-severity">${escapeHtml(dominantSeverity)}</td>
       </tr>`;
     })
     .join("");
@@ -57,7 +68,7 @@ function renderTopLabels(labels: InsightTopLabel[]): string {
     <div class="table-container">
       <table aria-label="Top labels table">
         <thead>
-          <tr><th scope="col">Label</th><th scope="col">Count</th><th scope="col">Avg. Severity</th></tr>
+          <tr><th scope="col">Label</th><th scope="col">Count</th><th scope="col">Dominant Severity</th></tr>
         </thead>
         <tbody>${items}</tbody>
       </table>

@@ -47,10 +47,10 @@ describe("buildInsightReportDocument", () => {
 
     expect(html).toContain("ClipNotes Insight Report");
     expect(html).toContain("Severity distribution");
-    expect(html).toContain("Top focus areas");
+  expect(html).toContain("Top focus areas");
     expect(html).toContain("Timeline breakdown");
     expect(html).toContain("Latency");
-    expect(html).toContain("High");
+  expect(html).toContain("Dominant Severity");
   });
 
   it("escapes unsafe characters in rendered content", () => {
