@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 
 from backend.app.core.config import get_settings
@@ -12,6 +13,7 @@ from backend.app.services.config_store import ConfigStore
 from backend.app.services.conversation import ConversationService
 from backend.app.services.hafnia import FakeHafniaClient, HafniaAnalysisClient, HafniaAnalysisClientProtocol
 from backend.app.services.hafnia_client import FakeHafniaService, HafniaClient, HafniaClientProtocol
+from backend.app.services.insights import InsightService
 from backend.app.services.key_store import KeyStore
 from backend.app.services.metrics_service import MetricsService
 from backend.app.services.sessions import SessionRegistry
@@ -167,3 +169,24 @@ def _get_metrics_service() -> MetricsService:
 
 def get_metrics_service() -> MetricsService:
     return _get_metrics_service()
+
+
+@lru_cache(maxsize=1)
+def _get_insight_service() -> InsightService:
+    settings = get_settings()
+    raw_ttl = os.environ.get("INSIGHTS_CACHE_TTL_SECONDS", "60")
+    try:
+        ttl = int(raw_ttl)
+    except ValueError:
+        ttl = 60
+    share_salt = os.environ.get("INSIGHTS_SHARE_TOKEN_SALT")
+    return InsightService(
+        database_url=settings.database_url,
+        cache_ttl_seconds=ttl,
+        share_token_salt=share_salt,
+        share_base_url=str(settings.frontend_url),
+    )
+
+
+def get_insight_service() -> InsightService:
+    return _get_insight_service()

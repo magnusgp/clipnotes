@@ -13,6 +13,8 @@ import type { FeatureFlagMap } from "../types/config";
 import CompareReason from "./CompareReason";
 import Settings from "./Settings";
 import Metrics from "./Metrics";
+import Insights from "./Insights";
+import InsightsShare from "./InsightsShare";
 import { useAnalyze } from "../hooks/useAnalyze";
 import { useClips } from "../hooks/useClips";
 
@@ -128,6 +130,7 @@ function AppLayout() {
   const navItems = [
     { id: "monitoring", label: "Monitoring", path: "/" },
     ...(isFeatureEnabled(flags, "ENABLE_GRAPH_VIEW", true) ? [{ id: "metrics", label: "Metrics", path: "/metrics" }] : []),
+    { id: "insights", label: "Insights", path: "/insights" },
     { id: "settings", label: "Settings", path: "/settings" },
   ];
 
@@ -171,6 +174,20 @@ function AppLayout() {
   );
 }
 
+function ShareLayout() {
+  return (
+    <main className="relative min-h-screen overflow-x-hidden bg-surface-canvas text-text-primary">
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 -z-10 bg-[radial-gradient(circle_at_15%_20%,rgba(34,211,238,0.18),transparent_55%),radial-gradient(circle_at_85%_10%,rgba(56,189,248,0.18),transparent_52%)]"
+      />
+      <div className="relative mx-auto flex w-full max-w-4xl flex-col gap-10 px-6 py-16">
+        <Outlet />
+      </div>
+    </main>
+  );
+}
+
 interface AppProps {
   initialFlags?: FeatureFlagMap;
   loadFlags?: boolean;
@@ -184,7 +201,12 @@ function App({ initialFlags, loadFlags = true }: AppProps = {}) {
           <Route element={<AppLayout />}>
             <Route index element={<MonitoringDashboard />} />
             <Route path="metrics" element={<Metrics />} />
+            <Route path="insights" element={<Insights />} />
             <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route path="share" element={<ShareLayout />}>
+            <Route index element={<InsightsShare />} />
+            <Route path=":token" element={<InsightsShare />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

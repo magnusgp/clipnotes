@@ -91,7 +91,7 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
         </ul>
         <figcaption>
           <p className="text-xs font-medium text-text-secondary/80">Legend</p>
-          <ul className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-secondary/70">
+          <ul className="mt-1 flex flex-wrap items-center gap-3 text-xs text-text-secondary/85">
             {SEVERITIES.map((severity) => (
               <li key={severity} className="flex items-center gap-2">
                 <span
@@ -102,7 +102,7 @@ export function Timeline({ moments, totalDuration, clipLabel }: TimelineProps) {
                     "bg-rose-400": severity === "high",
                   })}
                 />
-                <span>{SEVERITY_LABELS[severity]}</span>
+                <span className="text-text-primary/90 dark:text-text-primary">{SEVERITY_LABELS[severity]}</span>
               </li>
             ))}
           </ul>
