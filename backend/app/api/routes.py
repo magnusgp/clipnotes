@@ -51,12 +51,14 @@ from backend.app.services.sessions import SessionNotFoundError, SessionRegistry
 from backend.app.services.summarizer import Summarizer
 from backend.app.services.validators import UploadValidationError, validate_upload_file
 from backend.app.store import ClipNotFoundError, ClipRecord, ClipStore
+from backend.app.api.insights import router as insights_router
 from backend.app.reasoning.router import router as reasoning_router
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 router.include_router(reasoning_router)
+router.include_router(insights_router)
 system_router = APIRouter(tags=["system"])
 
 

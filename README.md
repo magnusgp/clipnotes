@@ -8,6 +8,7 @@
 - **Live operator console** – Monitor active analyses, revisit previous sessions, and triage follow-up questions without leaving the dashboard.
 - **SaaS-ready controls** – Tweak Hafnia model parameters, feature flags, and theme preferences in a dedicated settings workspace.
 - **Usage & health metrics** – Track request cadence, clip throughput, and latency warnings from a real-time metrics view.
+- **Insight Layer** – New in this release: a trend-aware analytics feature that transforms individual clip analyses into actionable summaries and temporal trends, automatically explained via Hafnia's Vision-Language Model, and ready to share via read-only links for stakeholders.
 
 The platform combines a FastAPI backend (Python 3.11 via `uv`) with a Vite + React frontend styled using Tailwind CSS, shadcn/ui, and Framer Motion. Production runs a managed Postgres instance on Neon, serves the frontend from Vercel, and deploys the backend on Render.
 
@@ -67,6 +68,13 @@ Visit `http://localhost:5173` to access the monitoring console. Vite proxies API
 - Animated tiles showcase today’s usage, lifetime totals, and latency warnings
 - Sparkline visualises hourly activity while the table summarises daily aggregates
 - Feature flag gating (`ENABLE_GRAPH_VIEW`) allows environments to hide the dashboard when needed
+
+### Shareable Insight Snapshots
+
+- `/api/insights/share` mints signed tokens while returning the cached insight metadata and ttl information
+- `/share/{token}` on the frontend renders a public, read-only layout that reuses the summary card and trend chart components
+- Tokens refresh the cached payload automatically, keeping shared links up to date without exposing the operator dashboard
+- Error banners guide recipients through expired or malformed link states, including optional retries when the backend is temporarily unavailable
 
 ## Deployment Notes
 

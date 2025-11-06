@@ -107,7 +107,7 @@ function AutoCharts({ metrics }: AutoChartsProps) {
           <dl className="grid gap-3 sm:grid-cols-3">
             {severityEntries.map(([severity, value]) => (
               <div key={severity} className="rounded-lg border border-border-glass/80 bg-surface-panel/90 p-3">
-                <dt className="text-xs font-medium uppercase tracking-wide text-text-secondary/80">{severity}</dt>
+                <dt className="text-xs font-medium uppercase tracking-wide text-text-primary/85 dark:text-text-primary">{severity}</dt>
                 <dd className="text-lg font-semibold text-text-primary">{toPercent(value)}</dd>
               </div>
             ))}
